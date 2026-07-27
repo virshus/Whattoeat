@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "npm install && npm install --prefix app",
+  "buildCommand": "npm run build --prefix app",
+  "outputDirectory": "app/dist",
+  "functions": {
+    "api/import-recipe.ts": {
+      "maxDuration": 60
+    }
+  }
+}

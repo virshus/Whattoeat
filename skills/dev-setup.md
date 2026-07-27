@@ -47,6 +47,10 @@ Probar: registrar dos usuarios → Perfil → Invitar → copiar código → en 
 
 Faltan `VITE_SUPABASE_*` o siguen con placeholder `YOUR_`. Ver `decisions/007-supabase-auth-persist-share.md`.
 
+## Deploy Vercel
+
+Config en raíz (`vercel.json` + `api/`). No hace falta Root Directory. Env en el dashboard: `VITE_SUPABASE_*` + `GEMINI_API_KEY`. Ver `gotchas/vercel-deploy.md`.
+
 ## No tocar
 
 - Bloque HMR / `DISABLE_HMR` en `vite.config.ts`.

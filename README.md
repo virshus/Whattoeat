@@ -90,14 +90,35 @@ Correr desde `app/`:
 | `npm run lint` | Typecheck (`tsc --noEmit`) |
 | `npm run clean` | Limpia `dist` |
 
+## Deploy en Vercel
+
+El repo ya trae `vercel.json` en la raíz (no hace falta configurar Root Directory).
+
+1. Importá el repo en [vercel.com](https://vercel.com) (o Redeploy si ya existe el proyecto).
+2. En **Settings → Environment Variables** agregá:
+
+| Variable | Scope |
+|---|---|
+| `VITE_SUPABASE_URL` | Production (y Preview si querés) |
+| `VITE_SUPABASE_ANON_KEY` | Production |
+| `GEMINI_API_KEY` | Production (para importar recetas) |
+
+3. Redeploy. La app sale de `app/dist`; el import vive en `/api/*` (serverless).
+
+Si ves `404: NOT_FOUND`, casi seguro faltaba el `vercel.json` o el deploy es anterior a estos archivos: hacé push + Redeploy.
+
+Detalle: [`gotchas/vercel-deploy.md`](gotchas/vercel-deploy.md).
+
 ## Estructura del repo
 
 ```
 whattoeat/
+├── api/                 # Serverless (Vercel): health + import-recipe
 ├── app/                 # Código de la aplicación
 │   ├── src/             # React (UI, estado, utils)
-│   ├── server/          # Express + import con Gemini
+│   ├── server/          # Express local + handlers compartidos
 │   └── .env.example
+├── vercel.json          # Build/output + funciones API
 ├── supabase/            # schema.sql (Postgres + RLS)
 ├── contexto/            # Specs de producto y diseño
 ├── decisions/           # ADRs
@@ -128,6 +149,8 @@ Detalle de dominio: [`AGENTS.md`](AGENTS.md) · diseño: [`contexto/design.md`](
 | Pantalla pide configurar Supabase | Completá `VITE_SUPABASE_*` sin placeholders `YOUR_` |
 | Import falla / Instagram | Scraping frágil; probá otra URL o revisá logs del server |
 | Health `geminiConfigured: false` | Env no cargado; reiniciá tras editar `.env.local` |
+| Vercel `404: NOT_FOUND` | Push de `vercel.json` + Redeploy; ver [`gotchas/vercel-deploy.md`](gotchas/vercel-deploy.md) |
+| Import OK en local, falla en Vercel | Falta `GEMINI_API_KEY` en Environment Variables de Vercel |
 
 Más detalle: [`skills/dev-setup.md`](skills/dev-setup.md) · [`gotchas/env-and-gemini.md`](gotchas/env-and-gemini.md).
 

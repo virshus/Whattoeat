@@ -15,6 +15,7 @@ coverage/
 .DS_Store
 *.log
 *.tsbuildinfo
+.vercel
 
 # Archives / local dumps
 *.zip

@@ -24,6 +24,7 @@
 
 - [x] `contexto/ficha_4d.md`, `contexto/design.md`, `contexto/decisiones.md`
 - [x] Sistema AGENTS + decisions/state/skills/gotchas/logs (2026-07-22)
+- [x] Deploy Vercel: `vercel.json` + `api/` serverless + gotcha (2026-07-27)
 
 ## Diagramas (referencia, no cargar en contexto de código)
 
