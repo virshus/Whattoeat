@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Whattoeat — Estructura y Flujo de Datos</title>
+  <style>
+    :root {
+      --color-primary: #9D00FF;
+      --color-primary-dark: #7A00C7;
+      --color-ink: #222222;
+      --color-ink-soft: #6B6B6B;
+      --color-surface: #FFFFFF;
+      --color-canvas: #F7F7F5;
+      --color-border: #E8E6E1;
+      --color-success: #00A699;
+      --color-warning: #FFB400;
+      --color-danger: #FF385C;
+      --color-highlight: rgba(157, 0, 255, 0.08);
+      --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      transition: all 0.2s ease;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background-color: var(--color-canvas);
+      color: var(--color-ink);
+      line-height: 1.6;
+      padding: 40px 24px;
+    }
+
+    .container {
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 40px;
+      border-bottom: 1px solid var(--color-border);
+      padding-bottom: 24px;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--color-ink);
+      margin-bottom: 8px;
+    }
+
+    header h1 span {
+      color: var(--color-primary);
+    }
+
+    header p {
+      color: var(--color-ink-soft);
+      font-size: 1.1rem;
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 32px;
+    }
+
+    @media (max-width: 1024px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+    }
+
+    .card h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: var(--color-ink);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card h2::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--color-border);
+    }
+
+    /* File Explorer / Directory tree styling */
+    .file-tree {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.9rem;
+      line-height: 1.8;
+    }
+
+    .tree-item {
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tree-item:hover {
+      background-color: var(--color-highlight);
+      color: var(--color-primary-dark);
+    }
+
+    .tree-item.folder {
+      font-weight: 600;
+      color: var(--color-primary-dark);
+    }
+
+    .tree-item.file {
+      color: var(--color-ink);
+      padding-left: 18px;
+    }
+
+    .tree-item.file::before {
+      content: '📄';
+      font-size: 0.8rem;
+    }
+
+    .indent-1 { padding-left: 16px; }
+    .indent-2 { padding-left: 32px; }
+
+    /* Interactive diagram wrapper */
+    .diagram-panel {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .interactive-board {
+      position: relative;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 16px;
+      padding: 30px;
+      min-height: 620px;
+      overflow: auto;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+    }
+
+    /* Layer Layouts */
+    .board-layer {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      margin-bottom: 60px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .board-layer:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Node Styling */
+    .node {
+      background: var(--color-canvas);
+      border: 2px solid var(--color-border);
+      border-radius: 12px;
+      padding: 14px 18px;
+      min-width: 140px;
+      text-align: center;
+      cursor: pointer;
+      position: relative;
+      font-size: 0.9rem;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+    }
+
+    .node:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 16px rgba(157, 0, 255, 0.12);
+    }
+
+    .node.data-source {
+      border-color: var(--color-warning);
+      background: #FFFDF9;
+    }
+
+    .node.state-manager {
+      border-color: var(--color-primary);
+      background: #FAF5FF;
+      font-size: 1rem;
+      padding: 18px 24px;
+    }
+
+    .node.view-screen {
+      border-color: var(--color-success);
+      background: #F4FBFB;
+    }
+
+    .node.overlay-modal {
+      border-color: var(--color-danger);
+      background: #FFF5F6;
+    }
+
+    .node .node-subtitle {
+      font-size: 0.75rem;
+      font-weight: 400;
+      color: var(--color-ink-soft);
+      margin-top: 4px;
+    }
+
+    .node.active-highlight {
+      border-color: var(--color-primary-dark);
+      background-color: #F3E8FF;
+      transform: scale(1.05);
+      box-shadow: 0 0 0 4px rgba(157, 0, 255, 0.15);
+    }
+
+    /* Legend */
+    .legend-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 12px;
+      font-size: 0.85rem;
+      justify-content: center;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .legend-badge {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      border: 2px solid var(--color-border);
+    }
+
+    .legend-badge.data { background: #FFFDF9; border-color: var(--color-warning); }
+    .legend-badge.state { background: #FAF5FF; border-color: var(--color-primary); }
+    .legend-badge.view { background: #F4FBFB; border-color: var(--color-success); }
+    .legend-badge.overlay { background: #FFF5F6; border-color: var(--color-danger); }
+
+    /* SVG Connections Styling */
+    .connections-svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .conn-path {
+      fill: none;
+      stroke: var(--color-border);
+      stroke-width: 2;
+      marker-end: url(#arrow);
+      stroke-dasharray: 4 4;
+    }
+
+    .conn-path.active {
+      stroke: var(--color-primary);
+      stroke-width: 3;
+      stroke-dasharray: none;
+      animation: dash 1s linear infinite;
+    }
+
+    @keyframes dash {
+      to {
+        stroke-dashoffset: -10;
+      }
+    }
+
+    /* Bottom Info Card */
+    .info-card {
+      min-height: 120px;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+    }
+
+    .info-card h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--color-primary-dark);
+    }
+
+    .info-card p {
+      font-size: 0.9rem;
+      color: var(--color-ink);
+    }
+
+    .info-details {
+      margin-top: 10px;
+      font-size: 0.85rem;
+      background: var(--color-canvas);
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--color-border);
+    }
+
+    /* Help Banner */
+    .help-banner {
+      background: #F3E8FF;
+      color: var(--color-primary-dark);
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Whattoeat — <span>Estructura y Flujo de Datos</span></h1>
+      <p>Explorador interactivo del proyecto React + Vite. Pasa el cursor por los archivos o nodos para ver sus relaciones.</p>
+    </header>
+
+    <div class="help-banner">
+      💡 <strong>Tip interactivo:</strong> Pasa el cursor (hover) por encima de cualquier archivo del árbol o nodo del diagrama para destacar visualmente el flujo de datos.
+    </div>
+
+    <div class="main-grid">
+      <!-- Left Panel: File Explorer -->
+      <div class="card">
+        <h2>Estructura del Proyecto</h2>
+        <div class="file-tree">
+          <div class="tree-item folder" data-node="root">whattoeat/</div>
+          <div class="tree-item file indent-1" data-node="design" title="Design System & Documentación de UI">design.md</div>
+          <div class="tree-item folder indent-1" data-node="src">src/</div>
+          <div class="tree-item file indent-2" data-node="main" title="Punto de entrada de React (Vite)">main.tsx</div>
+          <div class="tree-item file indent-2" data-node="index-css" title="Estilos globales con variables de Airbnb">index.css</div>
+          <div class="tree-item file indent-2" data-node="types" title="Tipos de TypeScript compartidos">types.ts</div>
+          <div class="tree-item file indent-2" data-node="data" title="Mock data de inicio">data.ts</div>
+          <div class="tree-item file indent-2" data-node="app" title="Estado central de la App">App.tsx</div>
+          <div class="tree-item folder indent-2" data-node="components">components/</div>
+          <div class="tree-item file indent-3" data-node="header" title="Header de navegación superior">Header.tsx</div>
+          <div class="tree-item file indent-3" data-node="drawer" title="Menú lateral móvil de navegación">Drawer.tsx</div>
+          <div class="tree-item file indent-3" data-node="weekly-highlight" title="Progreso del menú de la semana">WeeklyHighlight.tsx</div>
+          <div class="tree-item file indent-3" data-node="weekly-plan" title="Planificador Lun-Vie (Almuerzo/Cena)">WeeklyPlanView.tsx</div>
+          <div class="tree-item file indent-3" data-node="recipe-selector" title="Selector de recetas para slots vacíos">RecipeSelector.tsx</div>
+          <div class="tree-item file indent-3" data-node="recipe-detail" title="Ficha de receta, ingredientes y pasos">RecipeDetailView.tsx</div>
+          <div class="tree-item file indent-3" data-node="recipes-view" title="Vista de cuadrícula de recetas">RecipesView.tsx</div>
+          <div class="tree-item file indent-3" data-node="add-recipe" title="Formulario para agregar/editar receta">AddRecipeView.tsx</div>
+          <div class="tree-item file indent-3" data-node="shopping-list" title="Lista de compras dinámica por categorías">ShoppingListView.tsx</div>
+          <div class="tree-item file indent-3" data-node="shopping-card" title="Widget de cantidad de ingredientes pendientes">ShoppingCard.tsx</div>
+        </div>
+      </div>
+
+      <!-- Right Panel: Interactive Diagram -->
+      <div class="diagram-panel">
+        <div class="legend-row">
+          <div class="legend-item"><span class="legend-badge data"></span> Datos estáticos</div>
+          <div class="legend-item"><span class="legend-badge state"></span> Estado central / Manager</div>
+          <div class="legend-item"><span class="legend-badge view"></span> Pantalla / Componente</div>
+          <div class="legend-item"><span class="legend-badge overlay"></span> Modal / Diálogo</div>
+        </div>
+
+        <div class="interactive-board" id="board">
+          <svg class="connections-svg" id="svg-layer">
+            <defs>
+              <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1 L 10 5 L 0 9 z" fill="var(--color-primary-dark)" />
+              </marker>
+            </defs>
+            <!-- Connections will be drawn programmatically using script below -->
+          </svg>
+
+          <!-- Layer 1: Data Sources -->
+          <div class="board-layer">
+            <div class="node data-source" id="node-data" data-file="data">
+              data.ts
+              <div class="node-subtitle">Datos y Mocks iniciales</div>
+            </div>
+            <div class="node data-source" id="node-types" data-file="types">
+              types.ts
+              <div class="node-subtitle">Definición de Tipos</div>
+            </div>
+          </div>
+
+          <!-- Layer 2: State controller -->
+          <div class="board-layer">
+            <div class="node state-manager" id="node-app" data-file="app">
+              App.tsx (Root)
+              <div class="node-subtitle">Estados centrales: currentView, weekPlan, recipes, shoppingItems</div>
+            </div>
+          </div>
+
+          <!-- Layer 3: Main Views -->
+          <div class="board-layer">
+            <div class="node view-screen" id="node-weekly-plan" data-file="weekly-plan">
+              WeeklyPlanView
+              <div class="node-subtitle">Menú Semanal (Grid)</div>
+            </div>
+            <div class="node view-screen" id="node-recipes-view" data-file="recipes-view">
+              RecipesView
+              <div class="node-subtitle">Mis Recetas</div>
+            </div>
+            <div class="node view-screen" id="node-shopping-list" data-file="shopping-list">
+              ShoppingListView
+              <div class="node-subtitle">Lista de Compras</div>
+            </div>
+          </div>
+
+          <!-- Layer 4: Modals & Helpers -->
+          <div class="board-layer">
+            <div class="node overlay-modal" id="node-recipe-selector" data-file="recipe-selector">
+              RecipeSelector
+              <div class="node-subtitle">BottomSheet</div>
+            </div>
+            <div class="node overlay-modal" id="node-recipe-detail" data-file="recipe-detail">
+              RecipeDetailView
+              <div class="node-subtitle">Modal Detalle</div>
+            </div>
+            <div class="node overlay-modal" id="node-add-recipe" data-file="add-recipe">
+              AddRecipeView
+              <div class="node-subtitle">Modal Crear/Editar</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Info Box -->
+        <div class="info-card" id="info-box">
+          <h3 id="info-title">Whattoeat</h3>
+          <p id="info-desc">Pasa el cursor sobre un componente o archivo para explorar el flujo de la aplicación.</p>
+          <div class="info-details" id="info-extra" style="display: none;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Component relations definitions
+    const componentInfo = {
+      'design': {
+        title: 'design.md',
+        desc: 'Documentación del sistema de diseño (estilo Airbnb). Contiene la paleta de colores, principios tipográficos, sombras y layouts que definen el aspecto de la aplicación.',
+        extra: 'Define tokens como --color-primary (#9D00FF), --color-success (#00A699), etc. aplicados en index.css.'
+      },
+      'main': {
+        title: 'main.tsx',
+        desc: 'Punto de entrada de React. Monta el componente principal <App /> en el DOM de la aplicación.',
+        extra: 'Importa index.css para los estilos globales.'
+      },
+      'index-css': {
+        title: 'index.css',
+        desc: 'Estilos CSS de la aplicación. Declara variables del Design System basadas en Airbnb y clases auxiliares.',
+        extra: 'No usa frameworks externos como Tailwind, se basa en clases nativas limpias y variables de CSS.'
+      },
+      'types': {
+        title: 'types.ts',
+        desc: 'Declaración de las interfaces principales TypeScript de la aplicación.',
+        extra: 'Estructuras definidas: Recipe, WeekPlan, DayPlan, MealSlot, ShoppingItem, IngredientCategory, User.'
+      },
+      'data': {
+        title: 'data.ts',
+        desc: 'Provee datos iniciales de ejemplo (mock de usuario, recetas por defecto y menú planificado para la semana).',
+        extra: 'Exporta mockUser, mockWeekPlan y mockRecipes.'
+      },
+      'app': {
+        title: 'App.tsx (Root Controller)',
+        desc: 'Componente principal que gestiona el estado dinámico completo de la aplicación y la navegación entre pantallas.',
+        extra: 'Estados declarados: currentView (home|weekly|recipes|shopping), weekPlan (estado de comidas planificadas), recipes (catálogo de recetas), y shoppingItems (lista de compras generada).'
+      },
+      'header': {
+        title: 'Header.tsx',
+        desc: 'Barra superior interactiva. Muestra el título de la vista actual, botón de retroceso (Back) y el avatar de usuario para desplegar la navegación lateral.',
+        extra: 'Comunica la intención de navegación llamando a onOpenMenu y onBack.'
+      },
+      'drawer': {
+        title: 'Drawer.tsx',
+        desc: 'Panel lateral deslizante que permite cambiar entre las distintas vistas de la aplicación (Inicio, Semana, Recetas, Compras).',
+        extra: 'Modifica el estado currentView en App.tsx vía el callback onNavigate.'
+      },
+      'weekly-highlight': {
+        title: 'WeeklyHighlight.tsx',
+        desc: 'Tarjeta de resumen de la semana en la pantalla de Inicio. Muestra el porcentaje de progreso de comidas planificadas.',
+        extra: 'Muestra cuántas de las 10 comidas semanales (5 almuerzos y 5 cenas) ya tienen una receta asignada.'
+      },
+      'weekly-plan': {
+        title: 'WeeklyPlanView.tsx',
+        desc: 'Pantalla principal de planificación semanal. Presenta una rejilla de Lunes a Viernes con dos ranuras (slots) por día: Almuerzo y Cena.',
+        extra: 'Al pulsar un slot vacío, gatilla la selección de receta. Al pulsar uno ocupado, abre un menú de acciones.'
+      },
+      'recipe-selector': {
+        title: 'RecipeSelector.tsx',
+        desc: 'Selector de recetas. Presenta un catálogo interactivo con buscador y favoritos para asignar una receta a una ranura diaria.',
+        extra: 'Inserta el título y foto de la receta en el slot seleccionado llamando al manejador handleSelectRecipe.'
+      },
+      'recipe-detail': {
+        title: 'RecipeDetailView.tsx',
+        desc: 'Pantalla de detalle en formato modal. Muestra ingredientes, porciones, tiempo de preparación y los pasos para cocinar una receta.',
+        extra: 'Permite además marcar como favorita la receta, editarla o borrarla por completo.'
+      },
+      'recipes-view': {
+        title: 'RecipesView.tsx',
+        desc: 'Muestra la lista o catálogo completo de recetas disponibles en el sistema.',
+        extra: 'Permite filtrar recetas y contiene el botón para agregar una nueva receta (+ AddRecipeView).'
+      },
+      'add-recipe': {
+        title: 'AddRecipeView.tsx',
+        desc: 'Formulario flotante para crear una receta desde cero o editar una receta existente, incluyendo ingredientes paso a paso.',
+        extra: 'Actualiza el estado recipes en App.tsx una vez completado el guardado.'
+      },
+      'shopping-list': {
+        title: 'ShoppingListView.tsx',
+        desc: 'Vista de lista de compras. Agrupa los ingredientes agregados automáticamente y permite marcar tareas pendientes o completadas.',
+        extra: 'Permite además agregar ítems manuales e individuales sin estar atados a una receta específica.'
+      },
+      'shopping-card': {
+        title: 'ShoppingCard.tsx',
+        desc: 'Tarjeta interactiva mostrada en Inicio y Semana. Muestra el conteo de ingredientes pendientes en la lista de compras.',
+        extra: 'Redirecciona al usuario a la vista de Compras (currentView = "shopping").'
+      }
+    };
+
+    // Connections: SourceNodeId -> TargetNodeId
+    const connections = [
+      { from: 'node-data', to: 'node-app', label: 'Carga inicial de mockWeekPlan / mockRecipes' },
+      { from: 'node-types', to: 'node-app', label: 'Estructura interfaces' },
+      { from: 'node-app', to: 'node-weekly-plan', label: 'Pasa weekPlan y handlers de slots' },
+      { from: 'node-app', to: 'node-recipes-view', label: 'Pasa recipes y handleToggleFavorite' },
+      { from: 'node-app', to: 'node-shopping-list', label: 'Pasa shoppingItems y handlers' },
+      { from: 'node-weekly-plan', to: 'node-recipe-selector', label: 'Abre selector para slot (handlePlanMeal)' },
+      { from: 'node-recipe-selector', to: 'node-app', label: 'Selecciona receta -> actualiza weekPlan (handleSelectRecipe)' },
+      { from: 'node-recipes-view', to: 'node-add-recipe', label: 'Abre formulario creación de receta' },
+      { from: 'node-add-recipe', to: 'node-app', label: 'Guarda receta -> actualiza recipes (onSave)' },
+      { from: 'node-recipes-view', to: 'node-recipe-detail', label: 'Ver detalles de una receta' },
+      { from: 'node-recipe-detail', to: 'node-app', label: 'Editar/Borrar receta -> actualiza recipes' }
+    ];
+
+    const svg = document.getElementById('svg-layer');
+    const board = document.getElementById('board');
+    const infoTitle = document.getElementById('info-title');
+    const infoDesc = document.getElementById('info-desc');
+    const infoExtra = document.getElementById('info-extra');
+
+    // Draw SVG connections
+    function drawConnections() {
+      // Clear previous lines (keep <defs>)
+      const defs = svg.querySelector('defs');
+      svg.innerHTML = '';
+      svg.appendChild(defs);
+
+      const boardRect = board.getBoundingClientRect();
+
+      connections.forEach((conn, index) => {
+        const fromEl = document.getElementById(conn.from);
+        const toEl = document.getElementById(conn.to);
+
+        if (!fromEl || !toEl) return;
+
+        const fromRect = fromEl.getBoundingClientRect();
+        const toRect = toEl.getBoundingClientRect();
+
+        // Calculate coordinates relative to board scroll offset
+        const x1 = (fromRect.left + fromRect.width / 2) - boardRect.left + board.scrollLeft;
+        const y1 = (fromRect.top + fromRect.height) - boardRect.top + board.scrollTop;
+
+        const x2 = (toRect.left + toRect.width / 2) - boardRect.left + board.scrollLeft;
+        const y2 = toRect.top - boardRect.top + board.scrollTop;
+
+        // Draw curved path
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        const controlY = y1 + (y2 - y1) / 2;
+        const d = `M ${x1} ${y1} C ${x1} ${controlY}, ${x2} ${controlY}, ${x2} ${y2}`;
+
+        path.setAttribute('d', d);
+        path.setAttribute('class', 'conn-path');
+        path.setAttribute('id', `conn-${conn.from}-${conn.to}`);
+        path.dataset.from = conn.from;
+        path.dataset.to = conn.to;
+        
+        // Save description label
+        const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+        title.textContent = conn.label;
+        path.appendChild(title);
+
+        svg.appendChild(path);
+      });
+    }
+
+    // Interactive Hover State handlers
+    function highlightNode(fileId) {
+      // Find corresponding node
+      const nodes = document.querySelectorAll('.node');
+      nodes.forEach(n => n.classList.remove('active-highlight'));
+
+      const treeItems = document.querySelectorAll('.tree-item');
+      treeItems.forEach(t => t.classList.remove('active-highlight'));
+
+      // Highlight active item in tree
+      const treeItem = document.querySelector(`.tree-item[data-node="${fileId}"]`);
+      if (treeItem) treeItem.classList.add('active-highlight');
+
+      // Highlight matching node in diagram if exists
+      let targetNodeId = null;
+      if (fileId === 'data') targetNodeId = 'node-data';
+      else if (fileId === 'types') targetNodeId = 'node-types';
+      else if (fileId === 'app') targetNodeId = 'node-app';
+      else if (fileId === 'weekly-plan') targetNodeId = 'node-weekly-plan';
+      else if (fileId === 'recipes-view') targetNodeId = 'node-recipes-view';
+      else if (fileId === 'shopping-list') targetNodeId = 'node-shopping-list';
+      else if (fileId === 'recipe-selector') targetNodeId = 'node-recipe-selector';
+      else if (fileId === 'recipe-detail') targetNodeId = 'node-recipe-detail';
+      else if (fileId === 'add-recipe') targetNodeId = 'node-add-recipe';
+
+      if (targetNodeId) {
+        const nodeEl = document.getElementById(targetNodeId);
+        if (nodeEl) nodeEl.classList.add('active-highlight');
+      }
+
+      // Highlight SVG connections
+      const paths = document.querySelectorAll('.conn-path');
+      paths.forEach(p => {
+        if (targetNodeId && (p.dataset.from === targetNodeId || p.dataset.to === targetNodeId)) {
+          p.classList.add('active');
+        } else {
+          p.classList.remove('active');
+        }
+      });
+
+      // Update info panel
+      const info = componentInfo[fileId];
+      if (info) {
+        infoTitle.innerText = info.title;
+        infoDesc.innerText = info.desc;
+        infoExtra.innerText = info.extra;
+        infoExtra.style.display = 'block';
+      } else {
+        infoTitle.innerText = 'Whattoeat';
+        infoDesc.innerText = 'Pasa el cursor sobre un componente o archivo para explorar el flujo de la aplicación.';
+        infoExtra.style.display = 'none';
+      }
+    }
+
+    function clearHighlights() {
+      document.querySelectorAll('.node').forEach(n => n.classList.remove('active-highlight'));
+      document.querySelectorAll('.tree-item').forEach(t => t.classList.remove('active-highlight'));
+      document.querySelectorAll('.conn-path').forEach(p => p.classList.remove('active'));
+      
+      infoTitle.innerText = 'Whattoeat';
+      infoDesc.innerText = 'Pasa el cursor sobre un componente o archivo para explorar el flujo de la aplicación.';
+      infoExtra.style.display = 'none';
+    }
+
+    // Attach events
+    document.querySelectorAll('.tree-item').forEach(item => {
+      item.addEventListener('mouseenter', () => highlightNode(item.dataset.node));
+      item.addEventListener('mouseleave', clearHighlights);
+    });
+
+    document.querySelectorAll('.node').forEach(node => {
+      node.addEventListener('mouseenter', () => highlightNode(node.dataset.file));
+      node.addEventListener('mouseleave', clearHighlights);
+    });
+
+    // Initialize and redraw on window resize
+    window.addEventListener('load', () => {
+      drawConnections();
+      // Small timeout to ensure fonts and layout positions are calculated correctly
+      setTimeout(drawConnections, 200);
+    });
+    window.addEventListener('resize', drawConnections);
+  </script>
+</body>
+</html>

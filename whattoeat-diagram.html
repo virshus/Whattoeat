@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Whattoeat — Estructura y flujo de datos</title>
+  <style>
+    :root {
+      --primary: #9D00FF;
+      --primary-dark: #7A00C7;
+      --ink: #222222;
+      --ink-soft: #6B6B6B;
+      --surface: #FFFFFF;
+      --canvas: #F7F7F5;
+      --border: #E8E6E1;
+      --success: #00A699;
+      --warning: #FFB400;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Inter, system-ui, -apple-system, sans-serif;
+      background: var(--canvas);
+      color: var(--ink);
+      line-height: 1.5;
+      padding: 24px;
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      margin-bottom: 4px;
+    }
+
+    .subtitle {
+      color: var(--ink-soft);
+      margin-bottom: 32px;
+      font-size: 0.95rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr;
+      gap: 24px;
+      max-width: 1200px;
+    }
+
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    h2 {
+      font-size: 1.1rem;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--primary);
+      display: inline-block;
+    }
+
+    .tree {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.82rem;
+      line-height: 1.7;
+      background: #fafaf8;
+      border-radius: 8px;
+      padding: 16px;
+      overflow-x: auto;
+    }
+
+    .tree .dir { color: var(--primary-dark); font-weight: 600; }
+    .tree .file { color: var(--ink); }
+    .tree .note { color: var(--ink-soft); font-style: italic; }
+    .tree .highlight { background: #f3e8ff; border-radius: 3px; padding: 0 2px; }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 20px;
+      font-size: 0.8rem;
+    }
+
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .dot-data { background: var(--warning); }
+    .dot-state { background: var(--primary); }
+    .dot-view { background: var(--success); }
+    .dot-overlay { background: #E85D75; }
+
+    /* Flow diagram */
+    .flow-wrap {
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+
+    svg.flow {
+      min-width: 680px;
+      width: 100%;
+      height: auto;
+    }
+
+    .node rect, .node polygon {
+      stroke-width: 1.5;
+    }
+
+    .node-data rect { fill: #FFF8E6; stroke: var(--warning); }
+    .node-state rect { fill: #F3E8FF; stroke: var(--primary); }
+    .node-view rect { fill: #E6F7F5; stroke: var(--success); }
+    .node-overlay rect { fill: #FDE8EC; stroke: #E85D75; }
+
+    .node text {
+      font-family: Inter, system-ui, sans-serif;
+      font-size: 11px;
+      fill: var(--ink);
+      text-anchor: middle;
+    }
+
+    .node .sub {
+      font-size: 9px;
+      fill: var(--ink-soft);
+    }
+
+    .arrow {
+      stroke: #999;
+      stroke-width: 1.5;
+      fill: none;
+      marker-end: url(#arrowhead);
+    }
+
+    .arrow-label {
+      font-size: 9px;
+      fill: var(--ink-soft);
+      font-family: Inter, sans-serif;
+    }
+
+    .screens {
+      margin-top: 24px;
+    }
+
+    .screen-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .screen-card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      background: #fafaf8;
+    }
+
+    .screen-card h3 {
+      font-size: 0.9rem;
+      margin-bottom: 6px;
+      color: var(--primary-dark);
+    }
+
+    .screen-card ul {
+      font-size: 0.78rem;
+      color: var(--ink-soft);
+      padding-left: 16px;
+    }
+
+    .screen-card li { margin-bottom: 2px; }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 999px;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .badge-view { background: #E6F7F5; color: #00796B; }
+    .badge-overlay { background: #FDE8EC; color: #C62828; }
+  </style>
+</head>
+<body>
+  <h1>Whattoeat — Planificador semanal de comidas</h1>
+  <p class="subtitle">Estructura del proyecto (whattoeat.zip) y flujo de datos entre pantallas y componentes</p>
+
+  <div class="grid">
+    <section>
+      <h2>Estructura del proyecto</h2>
+      <div class="tree">
+<span class="dir">whattoeat/</span><br>
+├── <span class="file">design.md</span> <span class="note">← design system (Whattoeat)</span><br>
+├── <span class="file">whattoeat.zip</span> <span class="note">← app React + Vite</span><br>
+└── <span class="file">whattoeat-diagram.html</span> <span class="note">← este archivo</span><br>
+<br>
+<span class="dir">whattoeat.zip →</span><br>
+├── <span class="file">index.html</span>, <span class="file">package.json</span>, <span class="file">vite.config.ts</span><br>
+└── <span class="dir">src/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── <span class="highlight">App.tsx</span> <span class="note">estado central + navegación</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── <span class="highlight">data.ts</span> <span class="note">mockUser, mockWeekPlan, mockRecipes</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── <span class="file">types.ts</span> <span class="note">Recipe, WeekPlan, ShoppingItem…</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── <span class="file">main.tsx</span>, <span class="file">index.css</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;└── <span class="dir">components/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── <span class="file">Header.tsx</span>, <span class="file">Drawer.tsx</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── <span class="file">WeeklyHighlight.tsx</span>, <span class="file">WeeklyPlanView.tsx</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── <span class="file">ShoppingCard.tsx</span>, <span class="file">ShoppingListView.tsx</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── <span class="file">RecipeList.tsx</span>, <span class="file">RecipesView.tsx</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── <span class="file">RecipeCard.tsx</span>, <span class="file">RecipeGridCard.tsx</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── <span class="file">RecipeSelector.tsx</span>, <span class="file">RecipeDetailView.tsx</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── <span class="file">AddRecipeView.tsx</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── <span class="file">BottomSheet.tsx</span>
+      </div>
+    </section>
+
+    <section>
+      <h2>Flujo de datos</h2>
+      <div class="legend">
+        <span><i class="dot dot-data"></i> Datos mock</span>
+        <span><i class="dot dot-state"></i> Estado en App.tsx</span>
+        <span><i class="dot dot-view"></i> Pantalla / vista</span>
+        <span><i class="dot dot-overlay"></i> Overlay / modal</span>
+      </div>
+
+      <div class="flow-wrap">
+        <svg class="flow" viewBox="0 0 720 520" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#999"/>
+            </marker>
+          </defs>
+
+          <!-- data.ts -->
+          <g class="node node-data" transform="translate(20, 20)">
+            <rect x="0" y="0" width="130" height="72" rx="8"/>
+            <text x="65" y="28" font-weight="600">data.ts</text>
+            <text x="65" y="44" class="sub">mockUser</text>
+            <text x="65" y="56" class="sub">mockWeekPlan</text>
+            <text x="65" y="68" class="sub">mockRecipes</text>
+          </g>
+
+          <!-- App state -->
+          <g class="node node-state" transform="translate(260, 10)">
+            <rect x="0" y="0" width="200" height="92" rx="8"/>
+            <text x="100" y="24" font-weight="600">App.tsx (estado)</text>
+            <text x="100" y="42" class="sub">weekPlan · recipes</text>
+            <text x="100" y="56" class="sub">shoppingItems · currentView</text>
+            <text x="100" y="70" class="sub">viewingRecipe · overlays</text>
+            <text x="100" y="84" class="sub">generateShoppingItems()</text>
+          </g>
+
+          <!-- Arrow data -> App -->
+          <path class="arrow" d="M 150 56 L 258 56"/>
+          <text class="arrow-label" x="204" y="48">inicializa</text>
+
+          <!-- Views row 1 -->
+          <g class="node node-view" transform="translate(20, 140)">
+            <rect x="0" y="0" width="110" height="50" rx="8"/>
+            <text x="55" y="22" font-weight="600">Inicio</text>
+            <text x="55" y="38" class="sub">home</text>
+          </g>
+          <g class="node node-view" transform="translate(150, 140)">
+            <rect x="0" y="0" width="110" height="50" rx="8"/>
+            <text x="55" y="22" font-weight="600">Menú semanal</text>
+            <text x="55" y="38" class="sub">weekly</text>
+          </g>
+          <g class="node node-view" transform="translate(280, 140)">
+            <rect x="0" y="0" width="110" height="50" rx="8"/>
+            <text x="55" y="22" font-weight="600">Recetas</text>
+            <text x="55" y="38" class="sub">recipes</text>
+          </g>
+          <g class="node node-view" transform="translate(410, 140)">
+            <rect x="0" y="0" width="110" height="50" rx="8"/>
+            <text x="55" y="22" font-weight="600">Compras</text>
+            <text x="55" y="38" class="sub">shopping</text>
+          </g>
+          <g class="node node-view" transform="translate(540, 140)">
+            <rect x="0" y="0" width="110" height="50" rx="8"/>
+            <text x="55" y="22" font-weight="600">Perfil</text>
+            <text x="55" y="38" class="sub">próximamente</text>
+          </g>
+
+          <!-- App -> views -->
+          <path class="arrow" d="M 360 102 L 360 130 L 75 130 L 75 138"/>
+          <path class="arrow" d="M 360 102 L 360 130 L 205 130 L 205 138"/>
+          <path class="arrow" d="M 360 102 L 360 130 L 335 130 L 335 138"/>
+          <path class="arrow" d="M 360 102 L 360 130 L 465 130 L 465 138"/>
+          <path class="arrow" d="M 360 102 L 360 130 L 595 130 L 595 138"/>
+          <text class="arrow-label" x="370" y="122">currentView</text>
+
+          <!-- Drawer -->
+          <g class="node node-overlay" transform="translate(540, 220)">
+            <rect x="0" y="0" width="120" height="44" rx="8"/>
+            <text x="60" y="18" font-weight="600">Drawer</text>
+            <text x="60" y="34" class="sub">navegación</text>
+          </g>
+          <path class="arrow" d="M 595 190 L 595 210 L 600 210 L 600 218"/>
+          <text class="arrow-label" x="610" y="206">onNavigate</text>
+
+          <!-- Components under home -->
+          <g class="node node-view" transform="translate(10, 230)">
+            <rect x="0" y="0" width="130" height="58" rx="6"/>
+            <text x="65" y="18" font-weight="600">WeeklyHighlight</text>
+            <text x="65" y="32" class="sub">plan + progreso</text>
+            <text x="65" y="46" class="sub">→ weekly</text>
+          </g>
+          <path class="arrow" d="M 75 190 L 75 228"/>
+
+          <!-- WeeklyPlanView -->
+          <g class="node node-view" transform="translate(150, 230)">
+            <rect x="0" y="0" width="130" height="58" rx="6"/>
+            <text x="65" y="18" font-weight="600">WeeklyPlanView</text>
+            <text x="65" y="32" class="sub">slots Lun–Vie</text>
+            <text x="65" y="46" class="sub">almuerzo / cena</text>
+          </g>
+          <path class="arrow" d="M 205 190 L 205 228"/>
+
+          <!-- RecipeSelector -->
+          <g class="node node-overlay" transform="translate(300, 230)">
+            <rect x="0" y="0" width="130" height="58" rx="6"/>
+            <text x="65" y="18" font-weight="600">RecipeSelector</text>
+            <text x="65" y="32" class="sub">BottomSheet</text>
+            <text x="65" y="46" class="sub">elige receta</text>
+          </g>
+          <path class="arrow" d="M 215 259 L 298 259"/>
+          <text class="arrow-label" x="250" y="252">planMeal</text>
+
+          <!-- weekPlan update -->
+          <path class="arrow" d="M 365 259 L 365 280 L 360 280 L 360 102"/>
+          <text class="arrow-label" x="375" y="275">actualiza slot</text>
+
+          <!-- RecipeDetail -->
+          <g class="node node-overlay" transform="translate(450, 230)">
+            <rect x="0" y="0" width="130" height="58" rx="6"/>
+            <text x="65" y="18" font-weight="600">RecipeDetailView</text>
+            <text x="65" y="32" class="sub">ingredientes</text>
+            <text x="65" y="46" class="sub">instrucciones</text>
+          </g>
+          <path class="arrow" d="M 335 169 L 420 169 L 515 228"/>
+          <text class="arrow-label" x="400" y="162">click receta</text>
+
+          <!-- ShoppingList -->
+          <g class="node node-view" transform="translate(410, 320)">
+            <rect x="0" y="0" width="150" height="58" rx="6"/>
+            <text x="75" y="18" font-weight="600">ShoppingListView</text>
+            <text x="75" y="32" class="sub">agrupado por categoría</text>
+            <text x="75" y="46" class="sub">checkbox / items custom</text>
+          </g>
+          <path class="arrow" d="M 465 190 L 465 318"/>
+          <text class="arrow-label" x="475" y="260">items</text>
+
+          <!-- generateShoppingItems flow -->
+          <g class="node node-data" transform="translate(20, 320)">
+            <rect x="0" y="0" width="170" height="70" rx="8"/>
+            <text x="85" y="22" font-weight="600">generateShoppingItems</text>
+            <text x="85" y="38" class="sub">weekPlan.slots</text>
+            <text x="85" y="52" class="sub">→ busca recipeTitle</text>
+            <text x="85" y="66" class="sub">→ suma ingredientes</text>
+          </g>
+          <path class="arrow" d="M 190 355 L 408 355"/>
+          <path class="arrow" d="M 360 102 L 190 102 L 190 318 L 105 318"/>
+          <text class="arrow-label" x="130" y="210">weekPlan + recipes</text>
+
+          <!-- AddRecipe -->
+          <g class="node node-overlay" transform="translate(580, 320)">
+            <rect x="0" y="0" width="120" height="58" rx="6"/>
+            <text x="60" y="18" font-weight="600">AddRecipeView</text>
+            <text x="60" y="32" class="sub">crear / editar</text>
+            <text x="60" y="46" class="sub">→ recipes[]</text>
+          </g>
+          <path class="arrow" d="M 335 169 L 335 200 L 640 200 L 640 318"/>
+          <text class="arrow-label" x="500" y="195">RecipesView</text>
+
+          <!-- Recipes list -->
+          <g class="node node-view" transform="translate(280, 400)">
+            <rect x="0" y="0" width="160" height="50" rx="6"/>
+            <text x="80" y="22" font-weight="600">RecipeList / RecipesView</text>
+            <text x="80" y="38" class="sub">favoritos · grid</text>
+          </g>
+          <path class="arrow" d="M 335 190 L 335 398"/>
+          <path class="arrow" d="M 75 288 L 75 350 L 360 350 L 360 398"/>
+          <text class="arrow-label" x="200" y="345">recipes[]</text>
+
+          <!-- ShoppingCard -->
+          <g class="node node-view" transform="translate(150, 400)">
+            <rect x="0" y="0" width="110" height="50" rx="6"/>
+            <text x="55" y="22" font-weight="600">ShoppingCard</text>
+            <text x="55" y="38" class="sub">contador → shopping</text>
+          </g>
+          <path class="arrow" d="M 205 288 L 205 398"/>
+        </svg>
+      </div>
+    </section>
+  </div>
+
+  <section class="screens">
+    <h2>Pantallas y componentes</h2>
+    <div class="screen-cards">
+      <div class="screen-card">
+        <span class="badge badge-view">Vista</span>
+        <h3>Inicio (home)</h3>
+        <ul>
+          <li>WeeklyHighlight — progreso semanal</li>
+          <li>ShoppingCard — acceso rápido a compras</li>
+          <li>RecipeList — recetas favoritas</li>
+        </ul>
+      </div>
+      <div class="screen-card">
+        <span class="badge badge-view">Vista</span>
+        <h3>Menú semanal (weekly)</h3>
+        <ul>
+          <li>WeeklyPlanView — 5 días × 2 comidas</li>
+          <li>Slot vacío → RecipeSelector</li>
+          <li>Slot lleno → acciones (ver / cambiar / quitar)</li>
+        </ul>
+      </div>
+      <div class="screen-card">
+        <span class="badge badge-view">Vista</span>
+        <h3>Recetas (recipes)</h3>
+        <ul>
+          <li>RecipesView — grid completo</li>
+          <li>Abrir AddRecipeView para nueva receta</li>
+        </ul>
+      </div>
+      <div class="screen-card">
+        <span class="badge badge-view">Vista</span>
+        <h3>Lista de compras (shopping)</h3>
+        <ul>
+          <li>ShoppingListView por categoría</li>
+          <li>Tachar items, agregar custom</li>
+        </ul>
+      </div>
+      <div class="screen-card">
+        <span class="badge badge-overlay">Overlay</span>
+        <h3>RecipeDetailView</h3>
+        <ul>
+          <li>Detalle full-screen de una receta</li>
+          <li>Favorito, editar, eliminar</li>
+        </ul>
+      </div>
+      <div class="screen-card">
+        <span class="badge badge-overlay">Overlay</span>
+        <h3>Drawer + BottomSheets</h3>
+        <ul>
+          <li>Drawer — menú lateral de navegación</li>
+          <li>BottomSheet — selector y acciones de slot</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</body>
+</html>

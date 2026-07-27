@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Env / secrets (never commit)
+.env
+.env.*
+!.env.example
+
+# Build outputs
+build/
+dist/
+coverage/
+
+# OS / tooling
+.DS_Store
+*.log
+*.tsbuildinfo
+
+# Archives / local dumps
+*.zip
