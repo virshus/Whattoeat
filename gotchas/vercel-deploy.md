@@ -29,3 +29,7 @@ Después de agregar o cambiar env → Redeploy.
 ## Nota
 
 Hobby: timeout de serverless limitado; imports lentos (Instagram + Gemini) pueden cortarse. `maxDuration` en `vercel.json` está en 60s (sujeto al plan).
+
+## TS5097 (imports `.ts`)
+
+Los handlers usan imports con extensión `.ts` (tsx local). Vercel typechequea `api/` desde la raíz: hace falta `tsconfig.json` en la raíz con `allowImportingTsExtensions` + `noEmit` (igual que `app/tsconfig.json`).
