@@ -41,6 +41,7 @@ Código en `app/src/`. Specs y decisiones en `contexto/`.
 | Plan semanal | `app/src/types.ts` → `WeeklyPlanView.tsx` → `App.tsx` (handlers) | — |
 | Import recetas | `skills/recipe-import.md` → `app/server/importRecipe.ts` → `AddRecipeView.tsx` | Transcripts viejos |
 | Dev / env | `skills/dev-setup.md` → `gotchas/env-and-gemini.md` | `.env.local` en chat |
+| Deploy Vercel | `gotchas/vercel-deploy.md` → `vercel.json` → `api/` | Root Directory en dashboard |
 | Nueva feature | `state/done.md` + `decisions/` relevantes | README genérico AI Studio |
 
 ## Routing de skills
