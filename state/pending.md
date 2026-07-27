@@ -25,5 +25,5 @@ Prioridad aproximada (arriba = más urgente).
 ## P3 — Ops
 
 12. **Deploy URL pública** + QA cálculos (ficha D4).
-13. Primer commit git (repo sin commits aún).
+13. ~~Primer commit git~~ — hecho: https://github.com/virshus/Whattoeat
 14. Limpiar raíz: `whattoeat.zip`, diagramas HTML si ya no se usan.
