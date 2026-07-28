@@ -44,6 +44,7 @@ import {
 } from './services/householdData';
 import {
   clearAddRecipeDraft,
+  clearAddRecipeFormDraft,
   readAddRecipeDraft,
   readAddRecipeOpen,
   writeAddRecipeOpen,
@@ -670,6 +671,11 @@ export default function App() {
             onToggleFavorite={handleToggleFavorite}
             onDelete={handleDeleteRecipe}
             onEdit={() => {
+              // Start edit on the form immediately; drop any leftover "create" draft.
+              const draft = readAddRecipeDraft();
+              if (!draft || draft.editingRecipeId !== viewingRecipe.id) {
+                clearAddRecipeFormDraft();
+              }
               setEditingRecipe(viewingRecipe);
               setIsAddRecipeOpen(true);
             }}

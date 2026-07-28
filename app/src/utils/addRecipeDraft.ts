@@ -77,6 +77,11 @@ export function clearAddRecipeDraft(): void {
   safeRemove(ADD_RECIPE_OPEN_KEY);
 }
 
+/** Clears only the form draft, keeping the "sheet open" flag. */
+export function clearAddRecipeFormDraft(): void {
+  safeRemove(ADD_RECIPE_DRAFT_KEY);
+}
+
 export function draftFromRecipe(recipe: Recipe): Omit<
   AddRecipeDraft,
   'method' | 'url' | 'importWarning' | 'importError'

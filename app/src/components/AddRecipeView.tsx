@@ -31,27 +31,40 @@ function tagColorFor(label: string, index: number): Tag['color'] {
 }
 
 export function AddRecipeView({ isOpen, onClose, onSave, initialData }: AddRecipeViewProps) {
-  const [method, setMethod] = useState<AddRecipeMethod>('options');
+  const [method, setMethod] = useState<AddRecipeMethod>(() => (initialData ? 'manual' : 'options'));
   const [url, setUrl] = useState('');
   const [isImporting, setIsImporting] = useState(false);
   const [isImageProcessing, setIsImageProcessing] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
   const [importWarning, setImportWarning] = useState<string | null>(null);
-  const [sourceUrl, setSourceUrl] = useState('');
-  const [sourceName, setSourceName] = useState('');
+  const [sourceUrl, setSourceUrl] = useState(() => initialData?.source?.url || '');
+  const [sourceName, setSourceName] = useState(() => initialData?.source?.name || '');
   
   // Recipe form state
-  const [title, setTitle] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
-  const [servings, setServings] = useState<number | null>(null);
-  const [time, setTime] = useState('');
-  const [tags, setTags] = useState<string[]>([]);
-  const [ingredients, setIngredients] = useState<{id: string, name: string, quantity: string}[]>([
-    {id: '1', name: '', quantity: ''}
-  ]);
-  const [instructions, setInstructions] = useState<{id: string, text: string}[]>([
-    {id: '1', text: ''}
-  ]);
+  const [title, setTitle] = useState(() => initialData?.title ?? '');
+  const [imageUrl, setImageUrl] = useState(() => initialData?.imageUrl ?? '');
+  const [servings, setServings] = useState<number | null>(() => initialData?.servings ?? null);
+  const [time, setTime] = useState(() => initialData?.prepTime?.replace(/\D/g, '') || '');
+  const [tags, setTags] = useState<string[]>(() =>
+    initialData?.tags ? initialData.tags.map((t) => t.label) : []
+  );
+  const [ingredients, setIngredients] = useState<{id: string, name: string, quantity: string}[]>(() =>
+    initialData?.ingredients && initialData.ingredients.length > 0
+      ? initialData.ingredients.map((i) => ({
+          id: Math.random().toString(36).slice(2, 9),
+          name: i.name,
+          quantity: i.quantity,
+        }))
+      : [{ id: '1', name: '', quantity: '' }]
+  );
+  const [instructions, setInstructions] = useState<{id: string, text: string}[]>(() =>
+    initialData?.instructions && initialData.instructions.length > 0
+      ? initialData.instructions.map((i) => ({
+          id: Math.random().toString(36).slice(2, 9),
+          text: i.text,
+        }))
+      : [{ id: '1', text: '' }]
+  );
 
   /** Skip wiping form when remounting with same open session (tab/app switch). */
   const hydratedKeyRef = useRef<string | null>(null);
@@ -72,9 +85,8 @@ export function AddRecipeView({ isOpen, onClose, onSave, initialData }: AddRecip
     setImportError(null);
   };
 
-  const applyDraft = (draft: ReturnType<typeof readAddRecipeDraft>) => {
-    if (!draft) return;
-    setMethod(draft.method);
+  const applyDraft = (draft: NonNullable<ReturnType<typeof readAddRecipeDraft>>, forceManual: boolean) => {
+    setMethod(forceManual ? 'manual' : draft.method);
     setUrl(draft.url);
     setTitle(draft.title);
     setImageUrl(draft.imageUrl);
@@ -89,6 +101,23 @@ export function AddRecipeView({ isOpen, onClose, onSave, initialData }: AddRecip
     setImportError(draft.importError);
   };
 
+  const applyRecipe = (recipe: Recipe) => {
+    const fromRecipe = draftFromRecipe(recipe);
+    setMethod('manual');
+    setUrl('');
+    setTitle(fromRecipe.title);
+    setImageUrl(fromRecipe.imageUrl);
+    setServings(fromRecipe.servings);
+    setTime(fromRecipe.time);
+    setTags(fromRecipe.tags);
+    setIngredients(fromRecipe.ingredients);
+    setInstructions(fromRecipe.instructions);
+    setSourceUrl(fromRecipe.sourceUrl);
+    setSourceName(fromRecipe.sourceName);
+    setImportWarning(null);
+    setImportError(null);
+  };
+
   useEffect(() => {
     if (!isOpen) {
       hydratedKeyRef.current = null;
@@ -101,37 +130,30 @@ export function AddRecipeView({ isOpen, onClose, onSave, initialData }: AddRecip
     skipNextPersistRef.current = true;
 
     const saved = readAddRecipeDraft();
-    const savedMatches =
-      saved &&
-      (initialData
-        ? saved.editingRecipeId === initialData.id
-        : !saved.editingRecipeId || saved.editingRecipeId === null);
 
-    if (savedMatches && saved) {
-      applyDraft(saved);
+    if (initialData) {
+      // Edit mode: always the form. Restore draft only if it belongs to this recipe
+      // and was already on the form (never re-open the "tipo de carga" picker).
+      const editDraft =
+        saved &&
+        saved.editingRecipeId === initialData.id &&
+        saved.method === 'manual'
+          ? saved
+          : null;
+      if (editDraft) applyDraft(editDraft, true);
+      else applyRecipe(initialData);
       return;
     }
 
-    if (initialData) {
-      const fromRecipe = draftFromRecipe(initialData);
-      setMethod('manual');
-      setUrl('');
-      setTitle(fromRecipe.title);
-      setImageUrl(fromRecipe.imageUrl);
-      setServings(fromRecipe.servings);
-      setTime(fromRecipe.time);
-      setTags(fromRecipe.tags);
-      setIngredients(fromRecipe.ingredients);
-      setInstructions(fromRecipe.instructions);
-      setSourceUrl(fromRecipe.sourceUrl);
-      setSourceName(fromRecipe.sourceName);
-      setImportWarning(null);
-      setImportError(null);
-    } else {
-      setMethod('options');
-      setUrl('');
-      resetEmptyForm();
+    const createDraft = saved && !saved.editingRecipeId ? saved : null;
+    if (createDraft) {
+      applyDraft(createDraft, false);
+      return;
     }
+
+    setMethod('options');
+    setUrl('');
+    resetEmptyForm();
   }, [isOpen, initialData]);
 
   // Persist draft while the sheet is open (survives tab/app switch + remount).
@@ -141,6 +163,9 @@ export function AddRecipeView({ isOpen, onClose, onSave, initialData }: AddRecip
       skipNextPersistRef.current = false;
       return;
     }
+    // Never persist the options picker as an "edit" draft — it breaks reopen.
+    if (initialData && method !== 'manual') return;
+
     writeAddRecipeDraft({
       editingRecipeId: initialData?.id ?? null,
       method,
@@ -277,7 +302,8 @@ export function AddRecipeView({ isOpen, onClose, onSave, initialData }: AddRecip
   };
 
   const renderContent = () => {
-    if (method === 'options') {
+    // Edit never uses the upload-type picker.
+    if (method === 'options' && !initialData) {
       return (
         <div className="flex-1 overflow-y-auto page-x py-4">
           <div className="flex flex-col gap-4">
@@ -640,7 +666,11 @@ export function AddRecipeView({ isOpen, onClose, onSave, initialData }: AddRecip
       <header className="flex items-center justify-between px-4 py-4 md:px-8 mb-2 shrink-0">
         <div className="flex items-center gap-3">
           <button 
-            onClick={method !== 'options' ? () => setMethod('options') : handleClose}
+            onClick={
+              initialData || method === 'options'
+                ? handleClose
+                : () => setMethod('options')
+            }
             className="w-11 h-11 bg-white rounded-full flex items-center justify-center text-ink hover:text-primary transition-colors shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary active:scale-95 shrink-0"
           >
             <ChevronLeft size={24} strokeWidth={2.5} className="-ml-0.5" />
