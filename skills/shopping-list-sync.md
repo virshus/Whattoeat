@@ -27,6 +27,8 @@ Trigger: `useEffect` en `App.tsx` deps `[weekPlan, recipes]`.
 ## Test mental
 
 - 2 recetas con "tomate 200g" → un renglón "400 g" en Verdulería
+- "500 g" + "500 g" → "1 kg"; "1000 g" → "1 kg"
+- "100 gr" / "100 grs" / "100 gramos" → se muestran como "100 g"
 - "1 unidad" + "3 unidades" → "4 unidades"
 - "Papa" + "Papas" → un renglón Verdulería
 - "milanesa de pollo" → Carnicería

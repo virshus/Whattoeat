@@ -88,9 +88,9 @@ export function ShoppingListView({
 
       {categories.map((category) => {
         const categoryItems = items.filter((item) => item.category === category);
-        const count = categoryItems.length;
         const pendingItems = categoryItems.filter((i) => !i.isChecked);
         const completedItems = categoryItems.filter((i) => i.isChecked);
+        const count = pendingItems.length;
         const isOpen = openCategories[category];
 
         return (
@@ -105,7 +105,7 @@ export function ShoppingListView({
                 <h3 className="section-title truncate">{category}</h3>
                 <span
                   className="shrink-0 text-caption font-semibold px-2 py-0.5 rounded-md bg-primary/10 text-primary tabular-nums"
-                  aria-label={`${count} ${count === 1 ? 'ingrediente' : 'ingredientes'}`}
+                  aria-label={`${count} ${count === 1 ? 'pendiente' : 'pendientes'}`}
                 >
                   {count}
                 </span>

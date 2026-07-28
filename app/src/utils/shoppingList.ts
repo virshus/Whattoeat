@@ -15,6 +15,7 @@ const UNIT_CANONICAL: Record<string, string> = {
   uds: 'unidad',
   u: 'unidad',
   un: 'unidad',
+  // Gramos: cualquier alias se canoniciza a `g` y así se muestra en la lista.
   g: 'g',
   gr: 'g',
   grs: 'g',
@@ -25,6 +26,7 @@ const UNIT_CANONICAL: Record<string, string> = {
   kilos: 'kg',
   kilogramo: 'kg',
   kilogramos: 'kg',
+  // Mililitros / litros
   ml: 'ml',
   mililitro: 'ml',
   mililitros: 'ml',
@@ -72,6 +74,21 @@ export function normalizeUnit(unit: string): string {
   return UNIT_CANONICAL[cleaned] ?? cleaned;
 }
 
+type QuantityFamily = 'mass' | 'volume' | 'discrete';
+
+/** Convertible units → base (g / ml). Discrete units only sum with the same label. */
+const UNIT_BASE: Record<string, { family: QuantityFamily; factor: number }> = {
+  g: { family: 'mass', factor: 1 },
+  kg: { family: 'mass', factor: 1000 },
+  ml: { family: 'volume', factor: 1 },
+  l: { family: 'volume', factor: 1000 },
+};
+
+function formatNumber(amount: number): string {
+  if (Math.abs(amount - Math.round(amount)) < 1e-9) return String(Math.round(amount));
+  return String(parseFloat(amount.toFixed(2)));
+}
+
 export function parseQuantity(
   quantity: string
 ): { amount: number; unit: string } | null {
@@ -92,17 +109,82 @@ export function parseQuantity(
   };
 }
 
+/** Scale mass/volume for readable display: 1000 g → 1 kg, 1000 ml → 1 l. */
+export function scaleForDisplay(
+  amount: number,
+  canonicalUnit: string
+): { amount: number; unit: string } {
+  if (canonicalUnit === 'g' && amount >= 1000) {
+    return { amount: amount / 1000, unit: 'kg' };
+  }
+  if (canonicalUnit === 'kg' && amount > 0 && amount < 1) {
+    return { amount: amount * 1000, unit: 'g' };
+  }
+  if (canonicalUnit === 'ml' && amount >= 1000) {
+    return { amount: amount / 1000, unit: 'l' };
+  }
+  if (canonicalUnit === 'l' && amount > 0 && amount < 1) {
+    return { amount: amount * 1000, unit: 'ml' };
+  }
+  return { amount, unit: canonicalUnit };
+}
+
 export function formatQuantity(amount: number, canonicalUnit: string): string {
-  const rounded =
-    Math.abs(amount - Math.round(amount)) < 1e-9
-      ? String(Math.round(amount))
-      : String(parseFloat(amount.toFixed(2)));
+  const scaled = scaleForDisplay(amount, canonicalUnit);
+  const rounded = formatNumber(scaled.amount);
 
-  if (!canonicalUnit) return rounded;
+  if (!scaled.unit) return rounded;
 
-  const pair = UNIT_DISPLAY[canonicalUnit];
-  const label = pair ? (amount === 1 ? pair[0] : pair[1]) : canonicalUnit;
+  const pair = UNIT_DISPLAY[scaled.unit];
+  const label = pair ? (scaled.amount === 1 ? pair[0] : pair[1]) : scaled.unit;
   return `${rounded} ${label}`.trim();
+}
+
+function toBaseQuantity(parsed: {
+  amount: number;
+  unit: string;
+}): { family: QuantityFamily | string; baseAmount: number } | null {
+  if (!parsed.unit) {
+    return { family: 'unit:', baseAmount: parsed.amount };
+  }
+  const info = UNIT_BASE[parsed.unit];
+  if (info) {
+    return { family: info.family, baseAmount: parsed.amount * info.factor };
+  }
+  return { family: `discrete:${parsed.unit}`, baseAmount: parsed.amount };
+}
+
+function formatFromBase(baseAmount: number, family: QuantityFamily): string {
+  if (family === 'mass') {
+    return baseAmount >= 1000
+      ? formatQuantity(baseAmount / 1000, 'kg')
+      : formatQuantity(baseAmount, 'g');
+  }
+  return baseAmount >= 1000
+    ? formatQuantity(baseAmount / 1000, 'l')
+    : formatQuantity(baseAmount, 'ml');
+}
+
+/** Sum two quantity strings when units are compatible (incl. g+kg, ml+l). */
+export function sumQuantities(a: string, b: string): string | null {
+  const pa = parseQuantity(a);
+  const pb = parseQuantity(b);
+  if (!pa || !pb) return null;
+
+  const ba = toBaseQuantity(pa);
+  const bb = toBaseQuantity(pb);
+  if (!ba || !bb || ba.family !== bb.family) return null;
+
+  const sum = ba.baseAmount + bb.baseAmount;
+  if (ba.family === 'mass' || ba.family === 'volume') {
+    return formatFromBase(sum, ba.family);
+  }
+
+  // Same discrete unit (unidad, atado, …)
+  if (pa.unit === pb.unit) {
+    return formatQuantity(sum, pa.unit);
+  }
+  return null;
 }
 
 function newItemId(): string {
@@ -142,14 +224,13 @@ export function generateShoppingItems(plan: WeekPlan, recipesList: Recipe[]): Sh
 
               const parsedExisting = parseQuantity(existing.quantity);
               const parsedIncoming = parseQuantity(ing.quantity);
+              const summed =
+                parsedExisting && parsedIncoming
+                  ? sumQuantities(existing.quantity, ing.quantity)
+                  : null;
 
-              if (
-                parsedExisting &&
-                parsedIncoming &&
-                parsedExisting.unit === parsedIncoming.unit
-              ) {
-                const sum = parsedExisting.amount + parsedIncoming.amount;
-                existing.quantity = formatQuantity(sum, parsedExisting.unit);
+              if (summed) {
+                existing.quantity = summed;
               } else if (
                 ing.quantity.trim() &&
                 !existing.quantity.includes(ing.quantity.trim())
