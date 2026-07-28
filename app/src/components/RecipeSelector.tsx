@@ -86,7 +86,7 @@ export function RecipeSelector({ recipes, onSelect, onToggleFavorite, onAddRecip
             <div 
               key={recipe.id} 
               onClick={() => onSelect(recipe)} 
-              className="text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary radius-card transition-transform active:scale-[0.98]"
+              className="text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-primary radius-card transition-transform active:scale-[0.98] min-w-0"
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {

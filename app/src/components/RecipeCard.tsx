@@ -20,7 +20,7 @@ export function RecipeCard({ recipe, onToggleFavorite, onClick }: RecipeCardProp
 
   return (
     <div 
-      className={`bg-surface radius-card shadow-card flex p-3 gap-3 group ${onClick ? 'cursor-pointer active:scale-[0.98] transition-transform' : ''}`}
+      className={`bg-surface radius-card shadow-card flex p-3 gap-3 min-w-0 overflow-hidden group ${onClick ? 'cursor-pointer active:scale-[0.98] transition-transform' : ''}`}
       onClick={() => onClick?.(recipe)}
     >
       <div className="w-[88px] h-[88px] shrink-0 relative radius-card overflow-hidden">

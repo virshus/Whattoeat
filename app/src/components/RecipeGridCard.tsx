@@ -66,7 +66,7 @@ export function RecipeGridCard({ recipe, onToggleFavorite, onClick }: RecipeGrid
           )}
         </div>
 
-        <h3 className="font-display font-semibold text-small text-ink leading-tight mb-1.5 line-clamp-2">
+        <h3 className="font-display font-semibold text-small text-ink leading-tight mb-1.5">
           {recipe.title}
         </h3>
         

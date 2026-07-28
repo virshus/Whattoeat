@@ -113,7 +113,7 @@ export function WeeklyPlanView({
           const hasMeals = day.slots.some((s) => s.imageUrl);
 
           return (
-            <div key={day.dayName} className="relative flex gap-3 pb-5">
+            <div key={day.dayName} className="relative flex gap-3 pb-5 min-w-0">
               {!isLast && (
                 <div className="absolute left-[19px] top-10 bottom-0 w-[2px] bg-border" />
               )}
@@ -126,13 +126,13 @@ export function WeeklyPlanView({
                 {day.shortName}
               </div>
 
-              <div className="flex-1 flex flex-col gap-2.5">
+              <div className="flex-1 flex flex-col gap-2.5 min-w-0">
                 {day.slots.map((slot, idx) =>
                   slot.imageUrl ? (
                     <button
                       key={idx}
                       onClick={() => onPlannedMealClick?.(index, idx)}
-                      className="bg-surface radius-card p-3 shadow-card flex gap-3 items-center w-full text-left active:scale-[0.98] transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      className="bg-surface radius-card p-3 shadow-card flex gap-3 items-center w-full min-w-0 overflow-hidden text-left active:scale-[0.98] transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     >
                       <img
                         src={slot.imageUrl}
@@ -140,10 +140,12 @@ export function WeeklyPlanView({
                         className="w-11 h-11 radius-input object-cover shrink-0"
                       />
                       <div className="flex flex-col flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-0.5">
-                          <span className="text-caption font-semibold text-ink-soft">{slot.type}</span>
+                        <div className="flex items-center justify-between gap-2 mb-0.5 min-w-0">
+                          <span className="text-caption font-semibold text-ink-soft truncate">
+                            {slot.type}
+                          </span>
                           {slot.prepTime && (
-                            <div className="flex items-center text-ink-soft text-caption font-medium gap-1 shrink-0 ml-2">
+                            <div className="flex items-center text-ink-soft text-caption font-medium gap-1 shrink-0">
                               <Clock size={12} strokeWidth={2} />
                               <span>{slot.prepTime}</span>
                             </div>
