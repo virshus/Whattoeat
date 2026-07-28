@@ -5,19 +5,27 @@ import { RecipeCard } from './RecipeCard';
 import { EmptyState } from './EmptyState';
 import { getEmptyRecipesCopy, hasRecipes, sortRecipesForDisplay } from '../utils/selectors';
 
-const allTags = ['Favoritos', 'Vegetariano', 'Rápido', 'Saludable', 'Proteína', 'Keto'];
-
 interface RecipeSelectorProps {
   recipes: Recipe[];
+  filterTags?: string[];
   onSelect: (recipe: Recipe) => void;
   onToggleFavorite?: (id: string) => void;
   onAddRecipe?: () => void;
 }
 
-export function RecipeSelector({ recipes, onSelect, onToggleFavorite, onAddRecipe }: RecipeSelectorProps) {
+export function RecipeSelector({
+  recipes,
+  filterTags,
+  onSelect,
+  onToggleFavorite,
+  onAddRecipe,
+}: RecipeSelectorProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const emptyCopy = getEmptyRecipesCopy();
+  const allTags = filterTags?.length
+    ? filterTags
+    : ['Favoritos', 'Vegetariano', 'Rápido', 'Saludable', 'Proteína'];
 
   const toggleTag = (tag: string) => {
     setSelectedTags(prev => 
@@ -30,7 +38,7 @@ export function RecipeSelector({ recipes, onSelect, onToggleFavorite, onAddRecip
       const matchesSearch = recipe.title.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesTags = selectedTags.length === 0 || selectedTags.every(tag => {
         if (tag === 'Favoritos') return recipe.isFavorite;
-        return recipe.tags?.some(rTag => rTag.label === tag) ?? false;
+        return recipe.tags?.some(rTag => rTag.label.toLowerCase() === tag.toLowerCase()) ?? false;
       });
       return matchesSearch && matchesTags;
     });

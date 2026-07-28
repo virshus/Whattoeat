@@ -3,7 +3,6 @@ export const ALLOWED_IMPORT_TAGS = [
   'Rápido',
   'Saludable',
   'Proteína',
-  'Keto',
 ] as const;
 
 export type AllowedImportTag = (typeof ALLOWED_IMPORT_TAGS)[number];

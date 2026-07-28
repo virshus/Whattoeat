@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BookOpen, RefreshCw, Trash2 } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
 import type { Session } from '@supabase/supabase-js';
@@ -50,6 +50,13 @@ import {
   readAddRecipeOpen,
   writeAddRecipeOpen,
 } from './utils/addRecipeDraft';
+import {
+  forgetCustomTag,
+  getSelectableRecipeTags,
+  loadCustomTags,
+  recipeWithoutTag,
+  rememberCustomTag,
+} from './utils/recipeTags';
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -72,6 +79,7 @@ export default function App() {
   const [viewingRecipe, setViewingRecipe] = useState<Recipe | null>(null);
   const [isAddRecipeOpen, setIsAddRecipeOpen] = useState(() => readAddRecipeOpen());
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
+  const [storedCustomTags, setStoredCustomTags] = useState<string[]>([]);
 
   const skipNextShoppingPersist = useRef(false);
   const weekSaveTimer = useRef<number | null>(null);
@@ -82,6 +90,54 @@ export default function App() {
   useEffect(() => {
     householdIdRef.current = household?.id ?? null;
   }, [household?.id]);
+
+  useEffect(() => {
+    setStoredCustomTags(loadCustomTags(household?.id));
+  }, [household?.id]);
+
+  const knownRecipeTags = useMemo(
+    () => getSelectableRecipeTags(recipes, household?.id),
+    [recipes, household?.id, storedCustomTags]
+  );
+
+  const recipeFilterTags = useMemo(
+    () => ['Favoritos', ...knownRecipeTags],
+    [knownRecipeTags]
+  );
+
+  const handleCustomTagAdded = useCallback(
+    (label: string) => {
+      setStoredCustomTags(rememberCustomTag(household?.id, label));
+    },
+    [household?.id]
+  );
+
+  const handleCustomTagDeleted = useCallback(
+    (label: string) => {
+      setStoredCustomTags(forgetCustomTag(household?.id, label));
+
+      const key = label.trim().toLowerCase();
+      setRecipes((prev) => {
+        const next = prev.map((recipe) => {
+          const hasTag = recipe.tags?.some((t) => t.label.toLowerCase() === key);
+          return hasTag ? recipeWithoutTag(recipe, label) : recipe;
+        });
+
+        if (household?.id) {
+          const changed = next.filter((recipe, i) => recipe !== prev[i]);
+          void Promise.all(changed.map((recipe) => upsertRecipe(household.id, recipe))).catch(
+            (err) => console.error('Error al quitar etiqueta de recetas', err)
+          );
+        }
+
+        return next;
+      });
+
+      setEditingRecipe((prev) => (prev ? recipeWithoutTag(prev, label) : prev));
+      setViewingRecipe((prev) => (prev ? recipeWithoutTag(prev, label) : prev));
+    },
+    [household?.id]
+  );
 
   useEffect(() => {
     writeAddRecipeOpen(isAddRecipeOpen);
@@ -546,6 +602,7 @@ export default function App() {
         ) : currentView === 'recipes' ? (
           <RecipesView
             recipes={recipes}
+            filterTags={recipeFilterTags}
             onSelect={setViewingRecipe}
             onToggleFavorite={handleToggleFavorite}
             onAddRecipe={handleOpenAddRecipe}
@@ -589,6 +646,7 @@ export default function App() {
       >
         <RecipeSelector
           recipes={recipes}
+          filterTags={recipeFilterTags}
           onSelect={handleSelectRecipe}
           onToggleFavorite={handleToggleFavorite}
           onAddRecipe={handleOpenAddRecipeFromSelector}
@@ -698,6 +756,9 @@ export default function App() {
               setEditingRecipe(null);
             }}
             initialData={editingRecipe || undefined}
+            knownTags={knownRecipeTags}
+            onCustomTagAdded={handleCustomTagAdded}
+            onCustomTagDeleted={handleCustomTagDeleted}
             onSave={handleSaveRecipe}
           />
         )}

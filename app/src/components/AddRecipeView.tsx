@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, Camera, Clock, Users, Plus, GripVertical, Instagram, Globe, PenLine, Link as LinkIcon, ChevronRight, X } from 'lucide-react';
-import { motion } from 'motion/react';
+import { ChevronLeft, Camera, Clock, Users, Plus, GripVertical, Instagram, Globe, PenLine, Link as LinkIcon, ChevronRight, X, AlertTriangle } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Recipe, Tag } from '../types';
 import { importRecipeFromUrl, ImportRecipeError } from '../services/importRecipe';
 import { emptyFormState, mapDraftToForm, ALLOWED_IMPORT_TAGS } from '../types/importRecipe';
 import { fileToPersistedImageUrl } from '../utils/imageDataUrl';
 import { classifyIngredient } from '../utils/ingredientCategories';
+import { isBuiltinRecipeTag } from '../utils/recipeTags';
 import {
   clearAddRecipeDraft,
   draftFromRecipe,
@@ -19,6 +20,12 @@ interface AddRecipeViewProps {
   onClose: () => void;
   onSave: (recipe: Recipe) => void;
   initialData?: Recipe;
+  /** Built-in + persisted custom tags available to toggle. */
+  knownTags?: string[];
+  /** Persist a newly created custom tag for future recipes/filters. */
+  onCustomTagAdded?: (label: string) => void;
+  /** Remove a custom tag from catalog, filters, and all recipes. */
+  onCustomTagDeleted?: (label: string) => void;
 }
 
 const TAG_COLORS: Tag['color'][] = ['mint', 'violet', 'orange', 'lilac'];
@@ -27,11 +34,18 @@ function tagColorFor(label: string, index: number): Tag['color'] {
   if (label === 'Vegetariano' || label === 'Saludable') return 'mint';
   if (label === 'Rápido') return 'violet';
   if (label === 'Proteína') return 'orange';
-  if (label === 'Keto') return 'lilac';
   return TAG_COLORS[index % TAG_COLORS.length];
 }
 
-export function AddRecipeView({ isOpen, onClose, onSave, initialData }: AddRecipeViewProps) {
+export function AddRecipeView({
+  isOpen,
+  onClose,
+  onSave,
+  initialData,
+  knownTags,
+  onCustomTagAdded,
+  onCustomTagDeleted,
+}: AddRecipeViewProps) {
   const [method, setMethod] = useState<AddRecipeMethod>(() => (initialData ? 'manual' : 'options'));
   const [url, setUrl] = useState('');
   const [isImporting, setIsImporting] = useState(false);
@@ -47,7 +61,9 @@ export function AddRecipeView({ isOpen, onClose, onSave, initialData }: AddRecip
   const [servings, setServings] = useState<number | null>(() => initialData?.servings ?? null);
   const [time, setTime] = useState(() => initialData?.prepTime?.replace(/\D/g, '') || '');
   const [tags, setTags] = useState<string[]>(() =>
-    initialData?.tags ? initialData.tags.map((t) => t.label) : []
+    initialData?.tags
+      ? initialData.tags.map((t) => t.label).filter((t) => t.toLowerCase() !== 'keto')
+      : []
   );
   const [ingredients, setIngredients] = useState<{id: string, name: string, quantity: string}[]>(() =>
     initialData?.ingredients && initialData.ingredients.length > 0
@@ -66,6 +82,10 @@ export function AddRecipeView({ isOpen, onClose, onSave, initialData }: AddRecip
         }))
       : [{ id: '1', text: '' }]
   );
+  const [isAddTagOpen, setIsAddTagOpen] = useState(false);
+  const [newTagDraft, setNewTagDraft] = useState('');
+  const [tagError, setTagError] = useState<string | null>(null);
+  const [tagPendingDelete, setTagPendingDelete] = useState<string | null>(null);
 
   /** Skip wiping form when remounting with same open session (tab/app switch). */
   const hydratedKeyRef = useRef<string | null>(null);
@@ -93,7 +113,7 @@ export function AddRecipeView({ isOpen, onClose, onSave, initialData }: AddRecip
     setImageUrl(draft.imageUrl);
     setServings(draft.servings);
     setTime(draft.time);
-    setTags(draft.tags);
+    setTags(draft.tags.filter((t) => t.toLowerCase() !== 'keto'));
     setIngredients(draft.ingredients.length ? draft.ingredients : [{ id: '1', name: '', quantity: '' }]);
     setInstructions(draft.instructions.length ? draft.instructions : [{ id: '1', text: '' }]);
     setSourceUrl(draft.sourceUrl);
@@ -110,7 +130,7 @@ export function AddRecipeView({ isOpen, onClose, onSave, initialData }: AddRecip
     setImageUrl(fromRecipe.imageUrl);
     setServings(fromRecipe.servings);
     setTime(fromRecipe.time);
-    setTags(fromRecipe.tags);
+    setTags(fromRecipe.tags.filter((t) => t.toLowerCase() !== 'keto'));
     setIngredients(fromRecipe.ingredients);
     setInstructions(fromRecipe.instructions);
     setSourceUrl(fromRecipe.sourceUrl);
@@ -207,8 +227,49 @@ export function AddRecipeView({ isOpen, onClose, onSave, initialData }: AddRecip
     setMethod('options');
     setUrl('');
     setIsImporting(false);
+    setIsAddTagOpen(false);
+    setNewTagDraft('');
+    setTagError(null);
+    setTagPendingDelete(null);
     resetEmptyForm();
     onClose();
+  };
+
+  const selectableTags = (() => {
+    const base = knownTags?.length ? knownTags : [...ALLOWED_IMPORT_TAGS];
+    const seen = new Set(base.map((t) => t.toLowerCase()));
+    const extras = tags.filter((t) => !seen.has(t.toLowerCase()) && t.toLowerCase() !== 'keto');
+    return [...base, ...extras];
+  })();
+
+  const handleConfirmAddTag = () => {
+    const trimmed = newTagDraft.trim();
+    if (!trimmed) {
+      setTagError('Escribí un nombre para la etiqueta.');
+      return;
+    }
+    if (trimmed.toLowerCase() === 'keto') {
+      setTagError('Esa etiqueta ya no está disponible.');
+      return;
+    }
+    const exists = tags.some((t) => t.toLowerCase() === trimmed.toLowerCase());
+    if (exists) {
+      setTagError('Esa etiqueta ya está agregada.');
+      return;
+    }
+    setTags([...tags, trimmed]);
+    onCustomTagAdded?.(trimmed);
+    setIsAddTagOpen(false);
+    setNewTagDraft('');
+    setTagError(null);
+  };
+
+  const handleConfirmDeleteTag = () => {
+    if (!tagPendingDelete) return;
+    const label = tagPendingDelete;
+    setTags((prev) => prev.filter((t) => t.toLowerCase() !== label.toLowerCase()));
+    setTagPendingDelete(null);
+    onCustomTagDeleted?.(label);
   };
 
   const handleSave = () => {
@@ -268,7 +329,7 @@ export function AddRecipeView({ isOpen, onClose, onSave, initialData }: AddRecip
       setImageUrl(form.imageUrl);
       setTime(form.time);
       setServings(form.servings);
-      setTags(form.tags);
+      setTags(form.tags.filter((t) => t.toLowerCase() !== 'keto'));
       setIngredients(form.ingredients);
       setInstructions(form.instructions);
       setSourceUrl(form.sourceUrl);
@@ -511,47 +572,52 @@ export function AddRecipeView({ isOpen, onClose, onSave, initialData }: AddRecip
           <div>
             <h3 className="font-semibold text-body text-ink mb-3">Etiquetas</h3>
             <div className="flex flex-wrap gap-2">
-              {ALLOWED_IMPORT_TAGS.map((presetTag) => {
-                const isSelected = tags.includes(presetTag);
+              {selectableTags.map((presetTag) => {
+                const isSelected = tags.some((t) => t.toLowerCase() === presetTag.toLowerCase());
+                const isCustom = !isBuiltinRecipeTag(presetTag);
                 return (
-                  <button
+                  <div
                     key={presetTag}
-                    type="button"
-                    onClick={() => {
-                      if (isSelected) {
-                        setTags(tags.filter(t => t !== presetTag));
-                      } else {
-                        setTags([...tags, presetTag]);
-                      }
-                    }}
-                    className={`px-3 py-1.5 rounded-full text-sm font-semibold transition-colors focus:outline-none ${
-                      isSelected 
-                        ? 'bg-primary text-white shadow-sm' 
-                        : 'bg-white text-ink-soft hover:border-primary/50 border border-border'
+                    className={`inline-flex items-center rounded-full text-sm font-semibold transition-colors ${
+                      isSelected
+                        ? 'bg-primary text-white shadow-sm'
+                        : 'bg-white text-ink-soft border border-border'
                     }`}
                   >
-                    {presetTag}
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (isSelected) {
+                          setTags(tags.filter((t) => t.toLowerCase() !== presetTag.toLowerCase()));
+                        } else {
+                          setTags([...tags, presetTag]);
+                        }
+                      }}
+                      className={`px-3 py-1.5 focus:outline-none ${isCustom ? 'pr-1.5' : ''}`}
+                    >
+                      {presetTag}
+                    </button>
+                    {isCustom && (
+                      <button
+                        type="button"
+                        onClick={() => setTagPendingDelete(presetTag)}
+                        aria-label={`Eliminar etiqueta ${presetTag}`}
+                        className={`pr-2.5 pl-0.5 py-1.5 focus:outline-none ${
+                          isSelected ? 'text-white/90 hover:text-white' : 'text-ink-soft hover:text-red-500'
+                        }`}
+                      >
+                        <X size={14} strokeWidth={2.5} />
+                      </button>
+                    )}
+                  </div>
                 );
               })}
-              {tags.filter(t => !(ALLOWED_IMPORT_TAGS as readonly string[]).includes(t)).map((customTag) => (
-                <button
-                  key={customTag}
-                  type="button"
-                  onClick={() => setTags(tags.filter(t => t !== customTag))}
-                  className="px-3 py-1.5 rounded-full text-sm font-semibold transition-colors focus:outline-none bg-primary text-white shadow-sm flex items-center gap-1.5"
-                >
-                  {customTag}
-                  <X size={14} />
-                </button>
-              ))}
-              <button 
+              <button
                 type="button"
                 onClick={() => {
-                  const newTag = window.prompt('Nueva etiqueta:');
-                  if (newTag?.trim() && !tags.includes(newTag.trim())) {
-                    setTags([...tags, newTag.trim()]);
-                  }
+                  setNewTagDraft('');
+                  setTagError(null);
+                  setIsAddTagOpen(true);
                 }}
                 className="h-[32px] px-3 rounded-full border-2 border-dashed border-border flex items-center justify-center text-ink-soft hover:border-primary hover:text-primary transition-colors focus:outline-none active:scale-95 gap-1"
               >
@@ -663,6 +729,127 @@ export function AddRecipeView({ isOpen, onClose, onSave, initialData }: AddRecip
       transition={{ duration: 0.2 }}
       className="fixed inset-0 bg-canvas z-[100] flex flex-col h-full overflow-hidden"
     >
+      <AnimatePresence>
+        {isAddTagOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-ink/40 backdrop-blur-sm z-[110] flex items-center justify-center p-4"
+            onClick={() => setIsAddTagOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white radius-card p-5 max-w-sm w-full shadow-xl"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="add-tag-title"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 id="add-tag-title" className="section-title mb-2">
+                Nueva etiqueta
+              </h3>
+              <p className="text-ink-soft text-small mb-4">
+                Escribí un nombre corto para organizar esta receta.
+              </p>
+              <input
+                type="text"
+                value={newTagDraft}
+                onChange={(e) => {
+                  setNewTagDraft(e.target.value);
+                  setTagError(null);
+                }}
+                placeholder="Ej. Sin TACC"
+                autoFocus
+                maxLength={24}
+                aria-label="Nombre de la etiqueta"
+                className="w-full bg-canvas radius-input px-3 py-3 text-body font-medium text-ink placeholder:text-ink-soft focus:outline-none focus:ring-2 focus:ring-primary mb-2"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleConfirmAddTag();
+                  }
+                  if (e.key === 'Escape') setIsAddTagOpen(false);
+                }}
+              />
+              {tagError && (
+                <p className="text-small text-danger mb-3" role="alert">
+                  {tagError}
+                </p>
+              )}
+              <div className="flex gap-3 mt-4">
+                <button
+                  type="button"
+                  onClick={() => setIsAddTagOpen(false)}
+                  className="flex-1 py-3 px-4 radius-pill font-semibold text-ink bg-surface transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmAddTag}
+                  className="flex-1 py-3 px-4 radius-pill font-semibold text-white bg-primary hover:opacity-90 transition-opacity"
+                >
+                  Agregar
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {tagPendingDelete && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-ink/40 backdrop-blur-sm z-[110] flex items-center justify-center p-4"
+            onClick={() => setTagPendingDelete(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white radius-card p-5 max-w-sm w-full shadow-xl"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="delete-tag-title"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="w-11 h-11 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center mb-3">
+                <AlertTriangle size={22} strokeWidth={2.5} />
+              </div>
+              <h3 id="delete-tag-title" className="section-title mb-2">
+                Eliminar etiqueta
+              </h3>
+              <p className="text-ink-soft text-small mb-5">
+                Se va a eliminar «{tagPendingDelete}» y el filtro correspondiente. Si estaba aplicada
+                en otras recetas, también se va a borrar de ellas. Esta acción no se puede deshacer.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setTagPendingDelete(null)}
+                  className="flex-1 py-3 px-4 radius-pill font-semibold text-ink bg-surface transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmDeleteTag}
+                  className="flex-1 py-3 px-4 radius-pill font-semibold text-white bg-red-500 hover:bg-red-600 transition-colors"
+                >
+                  Eliminar
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-4 md:px-8 mb-2 shrink-0">
         <div className="flex items-center gap-3">

@@ -189,7 +189,7 @@ export const mockRecipes: Recipe[] = [
     isFavorite: true,
     tags: [
       { label: 'Proteína', color: 'lilac' },
-      { label: 'Keto', color: 'violet' }
+      { label: 'Rápido', color: 'violet' }
     ],
     ingredients: [
       { name: 'Salmón fresco', quantity: '500g', category: 'Pescadería' },
