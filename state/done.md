@@ -1,6 +1,6 @@
 # Hecho
 
-Última actualización: 2026-07-22
+Última actualización: 2026-07-28
 
 ## Producto / UI
 
@@ -12,6 +12,7 @@
 - [x] Empty states (`EmptyState` + `selectors.ts`)
 - [x] Sync lista ↔ plan/recetas (`shoppingList.ts` + effect en `App.tsx`)
 - [x] UI clean: tokens tipográficos/espaciado en `index.css` (2026-07-21)
+- [x] Fotos de receta persistentes (data URL) + draft de creación en sessionStorage (2026-07-28)
 
 ## Import
 

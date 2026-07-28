@@ -4,8 +4,14 @@ import { motion } from 'motion/react';
 import { Recipe, Tag } from '../types';
 import { importRecipeFromUrl, ImportRecipeError } from '../services/importRecipe';
 import { emptyFormState, mapDraftToForm, ALLOWED_IMPORT_TAGS } from '../types/importRecipe';
-
-type AddMethod = 'options' | 'manual' | 'instagram' | 'web';
+import { fileToPersistedImageUrl } from '../utils/imageDataUrl';
+import {
+  clearAddRecipeDraft,
+  draftFromRecipe,
+  readAddRecipeDraft,
+  writeAddRecipeDraft,
+  type AddRecipeMethod,
+} from '../utils/addRecipeDraft';
 
 interface AddRecipeViewProps {
   isOpen: boolean;
@@ -25,9 +31,10 @@ function tagColorFor(label: string, index: number): Tag['color'] {
 }
 
 export function AddRecipeView({ isOpen, onClose, onSave, initialData }: AddRecipeViewProps) {
-  const [method, setMethod] = useState<AddMethod>('options');
+  const [method, setMethod] = useState<AddRecipeMethod>('options');
   const [url, setUrl] = useState('');
   const [isImporting, setIsImporting] = useState(false);
+  const [isImageProcessing, setIsImageProcessing] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
   const [importWarning, setImportWarning] = useState<string | null>(null);
   const [sourceUrl, setSourceUrl] = useState('');
@@ -46,7 +53,9 @@ export function AddRecipeView({ isOpen, onClose, onSave, initialData }: AddRecip
     {id: '1', text: ''}
   ]);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  /** Skip wiping form when remounting with same open session (tab/app switch). */
+  const hydratedKeyRef = useRef<string | null>(null);
+  const skipNextPersistRef = useRef(false);
 
   const resetEmptyForm = () => {
     const empty = emptyFormState();
@@ -63,36 +72,112 @@ export function AddRecipeView({ isOpen, onClose, onSave, initialData }: AddRecip
     setImportError(null);
   };
 
+  const applyDraft = (draft: ReturnType<typeof readAddRecipeDraft>) => {
+    if (!draft) return;
+    setMethod(draft.method);
+    setUrl(draft.url);
+    setTitle(draft.title);
+    setImageUrl(draft.imageUrl);
+    setServings(draft.servings);
+    setTime(draft.time);
+    setTags(draft.tags);
+    setIngredients(draft.ingredients.length ? draft.ingredients : [{ id: '1', name: '', quantity: '' }]);
+    setInstructions(draft.instructions.length ? draft.instructions : [{ id: '1', text: '' }]);
+    setSourceUrl(draft.sourceUrl);
+    setSourceName(draft.sourceName);
+    setImportWarning(draft.importWarning);
+    setImportError(draft.importError);
+  };
+
   useEffect(() => {
-    if (isOpen) {
-      if (initialData) {
-        setMethod('manual');
-        setTitle(initialData.title);
-        setImageUrl(initialData.imageUrl);
-        setServings(initialData.servings ?? null);
-        setTime(initialData.prepTime?.replace(/\D/g, '') || '');
-        setTags(initialData.tags ? initialData.tags.map(t => t.label) : []);
-        setIngredients(initialData.ingredients && initialData.ingredients.length > 0 
-          ? initialData.ingredients.map(i => ({ id: Math.random().toString(), name: i.name, quantity: i.quantity })) 
-          : [{id: '1', name: '', quantity: ''}]
-        );
-        setInstructions(initialData.instructions && initialData.instructions.length > 0
-          ? initialData.instructions.map(i => ({ id: Math.random().toString(), text: i.text }))
-          : [{id: '1', text: ''}]
-        );
-        setSourceUrl(initialData.source?.url || '');
-        setSourceName(initialData.source?.name || '');
-        setImportWarning(null);
-        setImportError(null);
-      } else {
-        setMethod('options');
-        setUrl('');
-        resetEmptyForm();
-      }
+    if (!isOpen) {
+      hydratedKeyRef.current = null;
+      return;
+    }
+
+    const sessionKey = initialData?.id ?? 'create';
+    if (hydratedKeyRef.current === sessionKey) return;
+    hydratedKeyRef.current = sessionKey;
+    skipNextPersistRef.current = true;
+
+    const saved = readAddRecipeDraft();
+    const savedMatches =
+      saved &&
+      (initialData
+        ? saved.editingRecipeId === initialData.id
+        : !saved.editingRecipeId || saved.editingRecipeId === null);
+
+    if (savedMatches && saved) {
+      applyDraft(saved);
+      return;
+    }
+
+    if (initialData) {
+      const fromRecipe = draftFromRecipe(initialData);
+      setMethod('manual');
+      setUrl('');
+      setTitle(fromRecipe.title);
+      setImageUrl(fromRecipe.imageUrl);
+      setServings(fromRecipe.servings);
+      setTime(fromRecipe.time);
+      setTags(fromRecipe.tags);
+      setIngredients(fromRecipe.ingredients);
+      setInstructions(fromRecipe.instructions);
+      setSourceUrl(fromRecipe.sourceUrl);
+      setSourceName(fromRecipe.sourceName);
+      setImportWarning(null);
+      setImportError(null);
+    } else {
+      setMethod('options');
+      setUrl('');
+      resetEmptyForm();
     }
   }, [isOpen, initialData]);
 
+  // Persist draft while the sheet is open (survives tab/app switch + remount).
+  useEffect(() => {
+    if (!isOpen) return;
+    if (skipNextPersistRef.current) {
+      skipNextPersistRef.current = false;
+      return;
+    }
+    writeAddRecipeDraft({
+      editingRecipeId: initialData?.id ?? null,
+      method,
+      url,
+      title,
+      imageUrl,
+      servings,
+      time,
+      tags,
+      ingredients,
+      instructions,
+      sourceUrl,
+      sourceName,
+      importWarning,
+      importError,
+    });
+  }, [
+    isOpen,
+    initialData?.id,
+    method,
+    url,
+    title,
+    imageUrl,
+    servings,
+    time,
+    tags,
+    ingredients,
+    instructions,
+    sourceUrl,
+    sourceName,
+    importWarning,
+    importError,
+  ]);
+
   const handleClose = () => {
+    clearAddRecipeDraft();
+    hydratedKeyRef.current = null;
     setMethod('options');
     setUrl('');
     setIsImporting(false);
@@ -175,11 +260,19 @@ export function AddRecipeView({ isOpen, onClose, onSave, initialData }: AddRecip
     }
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const objectUrl = URL.createObjectURL(file);
-      setImageUrl(objectUrl);
+    e.target.value = '';
+    if (!file) return;
+    setIsImageProcessing(true);
+    setImportError(null);
+    try {
+      const dataUrl = await fileToPersistedImageUrl(file);
+      setImageUrl(dataUrl);
+    } catch {
+      setImportError('No pudimos procesar esa imagen. Probá con otra foto.');
+    } finally {
+      setIsImageProcessing(false);
     }
   };
 
@@ -306,10 +399,15 @@ export function AddRecipeView({ isOpen, onClose, onSave, initialData }: AddRecip
             <input 
               type="file" 
               accept="image/*" 
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
+              disabled={isImageProcessing}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 disabled:cursor-wait" 
               onChange={handleImageChange} 
             />
-            {imageUrl ? (
+            {isImageProcessing ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-ink-soft bg-white/80 pointer-events-none">
+                <span className="font-medium text-sm">Procesando foto…</span>
+              </div>
+            ) : imageUrl ? (
               <>
                 <img src={imageUrl} alt="Receta" className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">

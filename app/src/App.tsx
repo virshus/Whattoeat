@@ -42,6 +42,12 @@ import {
   updateProfileName,
   upsertRecipe,
 } from './services/householdData';
+import {
+  clearAddRecipeDraft,
+  readAddRecipeDraft,
+  readAddRecipeOpen,
+  writeAddRecipeOpen,
+} from './utils/addRecipeDraft';
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -62,20 +68,36 @@ export default function App() {
   const [selectingSlot, setSelectingSlot] = useState<{ dayIndex: number; slotIndex: number } | null>(null);
   const [actionSlot, setActionSlot] = useState<{ dayIndex: number; slotIndex: number } | null>(null);
   const [viewingRecipe, setViewingRecipe] = useState<Recipe | null>(null);
-  const [isAddRecipeOpen, setIsAddRecipeOpen] = useState(false);
+  const [isAddRecipeOpen, setIsAddRecipeOpen] = useState(() => readAddRecipeOpen());
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
 
   const skipNextShoppingPersist = useRef(false);
   const weekSaveTimer = useRef<number | null>(null);
   const shoppingSaveTimer = useRef<number | null>(null);
   const householdIdRef = useRef<string | null>(null);
+  const hasLoadedRef = useRef(false);
 
   useEffect(() => {
     householdIdRef.current = household?.id ?? null;
   }, [household?.id]);
 
+  useEffect(() => {
+    writeAddRecipeOpen(isAddRecipeOpen);
+  }, [isAddRecipeOpen]);
+
+  // Reattach editing recipe after bootstrap / reload when the add sheet was open.
+  useEffect(() => {
+    if (!isAddRecipeOpen) return;
+    const editingId = readAddRecipeDraft()?.editingRecipeId;
+    if (!editingId) return;
+    if (editingRecipe?.id === editingId) return;
+    const found = recipes.find((r) => r.id === editingId);
+    if (found) setEditingRecipe(found);
+  }, [isAddRecipeOpen, recipes, editingRecipe?.id]);
+
   const bootstrap = useCallback(async (userId: string) => {
-    setBootstrapping(true);
+    const soft = hasLoadedRef.current;
+    if (!soft) setBootstrapping(true);
     setBootError(null);
     try {
       const data = await loadUserBootstrap(userId);
@@ -85,13 +107,16 @@ export default function App() {
       setRecipes(data.recipes);
       setWeekPlan(data.weekPlan);
       setShoppingItems(data.shoppingItems);
-      setCurrentView('home');
+      hasLoadedRef.current = true;
+      // Don't yank navigation when refreshing an already-loaded session (e.g. token refresh).
+      if (!soft) setCurrentView('home');
     } catch (err) {
       setBootError(err instanceof Error ? err.message : 'No se pudo cargar tu menú.');
       setUser(null);
       setHousehold(null);
+      hasLoadedRef.current = false;
     } finally {
-      setBootstrapping(false);
+      if (!soft) setBootstrapping(false);
     }
   }, []);
 
@@ -111,16 +136,30 @@ export default function App() {
       }
     });
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, nextSession) => {
       setSession(nextSession);
-      if (nextSession?.user) {
-        void bootstrap(nextSession.user.id);
-      } else {
+
+      if (event === 'SIGNED_OUT' || !nextSession?.user) {
+        hasLoadedRef.current = false;
+        clearAddRecipeDraft();
+        setIsAddRecipeOpen(false);
+        setEditingRecipe(null);
         setUser(null);
         setHousehold(null);
         setRecipes([]);
         setWeekPlan(emptyWeekPlan);
         setShoppingItems([]);
+        return;
+      }
+
+      // getSession already bootstraps the first load; ignore token refresh so the UI
+      // (e.g. add-recipe draft) is not unmounted when switching apps/tabs.
+      if (event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+        return;
+      }
+
+      if (event === 'SIGNED_IN') {
+        void bootstrap(nextSession.user.id);
       }
     });
 
@@ -200,12 +239,14 @@ export default function App() {
   };
 
   const handleOpenAddRecipe = () => {
+    setEditingRecipe(null);
     setIsAddRecipeOpen(true);
   };
 
   const handleOpenAddRecipeFromSelector = () => {
     setIsRecipeSelectorOpen(false);
     setSelectingSlot(null);
+    setEditingRecipe(null);
     setIsAddRecipeOpen(true);
   };
 
