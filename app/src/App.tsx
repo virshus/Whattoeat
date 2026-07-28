@@ -26,6 +26,7 @@ import {
   isShoppingFullyEmpty,
   getMealSlotSubtitle,
   getMealSlotPhrase,
+  selectHomeRecipes,
 } from './utils/selectors';
 import { isSupabaseConfigured, supabase } from './lib/supabase';
 import { signOut } from './services/auth';
@@ -396,6 +397,7 @@ export default function App() {
     const withId = {
       ...newRecipe,
       id: editingRecipe?.id ?? newLocalId(),
+      createdAt: editingRecipe?.createdAt ?? newRecipe.createdAt ?? new Date().toISOString(),
     };
     try {
       const saved = await upsertRecipe(household.id, withId);
@@ -508,7 +510,7 @@ export default function App() {
               onClick={() => setCurrentView('shopping')}
             />
             <RecipeList
-              recipes={recipes}
+              recipes={selectHomeRecipes(recipes)}
               onToggleFavorite={handleToggleFavorite}
               onRecipeClick={setViewingRecipe}
               onViewAll={() => setCurrentView('recipes')}

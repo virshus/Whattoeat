@@ -40,6 +40,7 @@ function mapRecipe(row: {
   source: unknown;
   ingredients: unknown;
   instructions: unknown;
+  created_at?: string | null;
 }): Recipe {
   return {
     id: row.id,
@@ -49,6 +50,7 @@ function mapRecipe(row: {
     servings: row.servings ?? undefined,
     tags: (row.tags as Tag[]) ?? [],
     isFavorite: row.is_favorite,
+    createdAt: row.created_at ?? undefined,
     source: (row.source as Recipe['source']) ?? undefined,
     ingredients: (row.ingredients as Ingredient[]) ?? [],
     instructions: (row.instructions as Instruction[]) ?? [],
@@ -104,7 +106,7 @@ export async function loadUserBootstrap(userId: string): Promise<{
       .from('household_members')
       .select('household_id, user_id, role, joined_at, profiles(id, name, email)')
       .eq('household_id', householdId),
-    supabase.from('recipes').select('*').eq('household_id', householdId).order('created_at'),
+    supabase.from('recipes').select('*').eq('household_id', householdId).order('created_at', { ascending: false }),
     supabase.from('week_plans').select('days, total_meals').eq('household_id', householdId).maybeSingle(),
     supabase.from('shopping_items').select('*').eq('household_id', householdId),
   ]);

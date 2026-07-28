@@ -33,6 +33,8 @@ export interface Recipe {
   servings?: number;
   tags: Tag[];
   isFavorite: boolean;
+  /** ISO timestamp — used for home ordering (newest first). */
+  createdAt?: string;
   source?: {
     name: string;
     url?: string;

@@ -3,7 +3,7 @@ import { Recipe } from '../types';
 import { Search, Plus } from 'lucide-react';
 import { RecipeGridCard } from './RecipeGridCard';
 import { EmptyState } from './EmptyState';
-import { getEmptyRecipesCopy, hasRecipes } from '../utils/selectors';
+import { getEmptyRecipesCopy, hasRecipes, sortRecipesForDisplay } from '../utils/selectors';
 
 const allTags = ['Favoritos', 'Vegetariano', 'Rápido', 'Saludable', 'Proteína', 'Keto'];
 
@@ -26,7 +26,7 @@ export function RecipesView({ recipes, onSelect, onToggleFavorite, onAddRecipe }
   };
 
   const filteredRecipes = useMemo(() => {
-    return recipes.filter(recipe => {
+    const filtered = recipes.filter(recipe => {
       const matchesSearch = recipe.title.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesTags = selectedTags.length === 0 || selectedTags.every(tag => {
         if (tag === 'Favoritos') return recipe.isFavorite;
@@ -34,6 +34,7 @@ export function RecipesView({ recipes, onSelect, onToggleFavorite, onAddRecipe }
       });
       return matchesSearch && matchesTags;
     });
+    return sortRecipesForDisplay(filtered);
   }, [recipes, searchQuery, selectedTags]);
 
   return (

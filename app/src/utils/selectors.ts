@@ -4,6 +4,40 @@ export function hasRecipes(recipes: Recipe[]): boolean {
   return recipes.length > 0;
 }
 
+const HOME_RECIPES_LIMIT = 6;
+
+function recipeRecency(recipe: Recipe): number {
+  if (recipe.createdAt) {
+    const t = Date.parse(recipe.createdAt);
+    if (!Number.isNaN(t)) return t;
+  }
+  return 0;
+}
+
+function byNewestFirst(a: Recipe, b: Recipe): number {
+  return recipeRecency(b) - recipeRecency(a);
+}
+
+/**
+ * Display order: newest favorites first, then newest non-favorites.
+ */
+export function sortRecipesForDisplay(recipes: Recipe[]): Recipe[] {
+  const favorites = recipes.filter((r) => r.isFavorite).sort(byNewestFirst);
+  const rest = recipes.filter((r) => !r.isFavorite).sort(byNewestFirst);
+  return [...favorites, ...rest];
+}
+
+/**
+ * Home list: up to 6 recipes with the same display order.
+ * If there are fewer than 6 total, return all.
+ */
+export function selectHomeRecipes(
+  recipes: Recipe[],
+  limit = HOME_RECIPES_LIMIT
+): Recipe[] {
+  return sortRecipesForDisplay(recipes).slice(0, limit);
+}
+
 export function plannedMealsCount(plan: WeekPlan): number {
   return plan.days.reduce(
     (acc, day) => acc + day.slots.filter((slot) => slot.recipeTitle).length,
