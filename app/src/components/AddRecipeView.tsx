@@ -5,6 +5,7 @@ import { Recipe, Tag } from '../types';
 import { importRecipeFromUrl, ImportRecipeError } from '../services/importRecipe';
 import { emptyFormState, mapDraftToForm, ALLOWED_IMPORT_TAGS } from '../types/importRecipe';
 import { fileToPersistedImageUrl } from '../utils/imageDataUrl';
+import { classifyIngredient } from '../utils/ingredientCategories';
 import {
   clearAddRecipeDraft,
   draftFromRecipe,
@@ -222,7 +223,7 @@ export function AddRecipeView({ isOpen, onClose, onSave, initialData }: AddRecip
       .map((ing) => ({
         name: ing.name.trim(),
         quantity: ing.quantity.trim(),
-        category: 'Otros' as const,
+        category: classifyIngredient(ing.name.trim()),
       }));
 
     const cleanedInstructions = instructions

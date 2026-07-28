@@ -23,4 +23,4 @@ El usuario compra físicamente por tipo de negocio. Cambiar la estructura rompe 
 
 ## Fuentes
 
-`contexto/ficha_4d.md` (D1–D2) · `app/src/types.ts` · `ShoppingListView.tsx`
+`contexto/ficha_4d.md` (D1–D2) · `contexto/ingredientes-secciones.md` · `app/src/types.ts` · `app/src/utils/ingredientCategories.ts` · `ShoppingListView.tsx`

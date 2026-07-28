@@ -4,18 +4,13 @@
 
 Ítem que no encaja → **Supermercado** por defecto.
 
-## Código actual
+## Código (2026-07-28)
 
-```ts
-category: ing.category || 'Otros'
-```
+`classifyIngredient` / `resolveIngredientCategory` en `app/src/utils/ingredientCategories.ts` defaultan a **Supermercado**. Spec de términos: `contexto/ingredientes-secciones.md`.
 
-`ShoppingListView` renderiza también la sección `Otros`.
+`Otros` sigue en el tipo y en `ShoppingListView` solo como fallback si quedaran ítems viejos; la UI ya oculta secciones vacías.
 
-## Impacto
+## Impacto histórico
 
-Ingredientes importados sin categoría caen en `Otros`, no en Supermercado. Divergencia producto/código.
-
-## Al tocar
-
-Preferir alinear a ficha (default Supermercado) + ocultar `Otros` si vacío, salvo que se decida lo contrario en un ADR nuevo.
+Antes: `ing.category || 'Otros'` mandaba imports sin categoría a Otros.
+Ahora: sin match confiable → Supermercado.

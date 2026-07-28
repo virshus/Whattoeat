@@ -1,56 +1,8 @@
 import { Recipe, WeekPlan, ShoppingItem } from '../types';
+import { preferredCategory, resolveIngredientCategory } from './ingredientCategories';
+import { normalizeName, stripAccents } from './ingredientNormalize';
 
-/** Strip diacritics so "Limón" / "limon" match. */
-function stripAccents(value: string): string {
-  return value.normalize('NFD').replace(/\p{M}/gu, '');
-}
-
-/**
- * Spanish singularization for shopping-list keys.
- * "papas" → "papa", "tomates" → "tomate", "unidades" (as a word) → "unidade" then unit map handles units.
- * Consonant + "es" plurals ("limones") → drop "es" when the "ones/anes/…" pattern applies.
- */
-function singularizeToken(token: string): string {
-  if (token.length <= 3) return token;
-
-  const irregular: Record<string, string> = {
-    panes: 'pan',
-    peces: 'pez',
-    raices: 'raiz',
-    lapices: 'lapiz',
-  };
-  if (irregular[token]) return irregular[token];
-
-  // pez → peces already covered; -ces → -z
-  if (token.endsWith('ces') && token.length > 4) {
-    return `${token.slice(0, -3)}z`;
-  }
-
-  // limones, melones, jamones, panes-style: consonant stem + "es"
-  if (/(?:ones|anes|enes|ores|ares|eres|ures|ales|eles|iles|oles|ules)$/.test(token)) {
-    // dientes (diente+s) ends with "entes" — keep as -e noun (drop s only)
-    if (/(?:entes|antes|intes|untes)$/.test(token)) {
-      return token.slice(0, -1);
-    }
-    return token.slice(0, -2);
-  }
-
-  // Regular vowel + s (papas, cebollas, tomates, zanahorias)
-  if (/[aeiou]s$/.test(token)) {
-    return token.slice(0, -1);
-  }
-
-  return token;
-}
-
-/** Canonical ingredient key: "Papa" and "Papas" → same bucket. */
-export function normalizeName(name: string): string {
-  return stripAccents(name.toLowerCase().trim())
-    .split(/\s+/)
-    .filter(Boolean)
-    .map(singularizeToken)
-    .join(' ');
-}
+export { normalizeName } from './ingredientNormalize';
 
 /**
  * Map plural/synonym units to a canonical unit for summing.
@@ -183,6 +135,10 @@ export function generateShoppingItems(plan: WeekPlan, recipesList: Recipe[]): Sh
             if (items[key]) {
               const existing = items[key];
               existing.name = preferDisplayName(existing.name, ing.name);
+              existing.category = preferredCategory(
+                existing.category,
+                resolveIngredientCategory(ing.name, ing.category)
+              );
 
               const parsedExisting = parseQuantity(existing.quantity);
               const parsedIncoming = parseQuantity(ing.quantity);
@@ -209,7 +165,7 @@ export function generateShoppingItems(plan: WeekPlan, recipesList: Recipe[]): Sh
                 quantity: parsed
                   ? formatQuantity(parsed.amount, parsed.unit)
                   : ing.quantity,
-                category: ing.category || 'Otros',
+                category: resolveIngredientCategory(ing.name, ing.category),
                 isChecked: false,
               };
             }

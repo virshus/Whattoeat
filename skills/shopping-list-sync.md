@@ -14,20 +14,24 @@ Trigger: `useEffect` en `App.tsx` deps `[weekPlan, recipes]`.
 
 ## Reglas
 
-1. Leer `decisions/001` + `002` + `003` antes de tocar lógica.
+1. Leer `decisions/001` + `002` + `003` + `contexto/ingredientes-secciones.md` antes de tocar lógica.
 2. Preservar `isCustom` y `isChecked` en merge.
 3. No inventar cantidades para "al gusto".
-4. UI: 3 secciones producto; `Otros` solo fallback.
+4. UI: 3 secciones producto; `Otros` solo fallback. Default sin match → **Supermercado**.
+5. Categoría: `classifyIngredient` (`ingredientCategories.ts`); taxonomía humana en el md de contexto.
 
 ## Archivos
 
-`utils/shoppingList.ts` · `ShoppingListView.tsx` · `App.tsx` (handlers add/toggle/delete)
+`contexto/ingredientes-secciones.md` · `utils/ingredientCategories.ts` · `utils/shoppingList.ts` · `ShoppingListView.tsx` · `App.tsx` (handlers add/toggle/delete)
 
 ## Test mental
 
-- 2 recetas con "tomate 200g" → un renglón "400 g"
+- 2 recetas con "tomate 200g" → un renglón "400 g" en Verdulería
 - "1 unidad" + "3 unidades" → "4 unidades"
-- "Papa" + "Papas" → un renglón
+- "Papa" + "Papas" → un renglón Verdulería
+- "milanesa de pollo" → Carnicería
+- "queso rallado light" → Supermercado
+- Desconocido → Supermercado (no Otros)
 - Quitar comida del plan → ítem desaparece (salvo custom)
 - Checkbox + regenerar → checkbox se mantiene por nombre normalizado
 - "Al gusto" nunca se convierte a número

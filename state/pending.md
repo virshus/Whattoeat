@@ -5,7 +5,7 @@ Prioridad aproximada (arriba = más urgente).
 ## P0 — Producto core
 
 1. **Setup Supabase en tu proyecto** — crear proyecto, correr `supabase/schema.sql`, keys en `.env.local` (`decisions/007`).
-2. **Alinear fallback de categoría** — código default `Otros` vs ficha "Supermercado" (`gotchas/otros-vs-supermercado.md`).
+2. **Alinear fallback de categoría** — ~~código default `Otros`~~ alineado a Supermercado vía `classifyIngredient` (2026-07-28); revisar si aún hace falta sección `Otros` en UI.
 3. **Match receta por `id`** — hoy el plan guarda `recipeTitle`; renombrar rompe lista (`gotchas/recipe-match-by-title.md`).
 4. **QA consolidación** — sumas, "al gusto", mismo ítem en 2 secciones, porciones (ficha D3–D4).
 5. **QA auth + share** — dos cuentas reales, invite code, remove member, persistencia al recargar.

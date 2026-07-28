@@ -37,7 +37,7 @@ Código en `app/src/`. Specs y decisiones en `contexto/`.
 |---|---|---|
 | Cualquier sesión | Este archivo → `state/pending.md` | `node_modules/`, glob `**/*` |
 | UI / componentes | `contexto/design.md` → `app/src/index.css` → componente tocado | Todo `components/` |
-| Lista de compras | `decisions/001-shopping-sections.md` → `app/src/utils/shoppingList.ts` → `ShoppingListView.tsx` | `data.ts` completo |
+| Lista de compras | `decisions/001-shopping-sections.md` → `contexto/ingredientes-secciones.md` → `app/src/utils/shoppingList.ts` → `ShoppingListView.tsx` | `data.ts` completo |
 | Plan semanal | `app/src/types.ts` → `WeeklyPlanView.tsx` → `App.tsx` (handlers) | — |
 | Import recetas | `skills/recipe-import.md` → `app/server/importRecipe.ts` → `AddRecipeView.tsx` | Transcripts viejos |
 | Dev / env | `skills/dev-setup.md` → `gotchas/env-and-gemini.md` | `.env.local` en chat |
@@ -133,6 +133,7 @@ Vite :3000 proxy `/api` → :3001. `npm run dev` = client + server.
 
 - Ficha 4D (descubrimiento): `contexto/ficha_4d.md`
 - Design system completo: `contexto/design.md` (stub en raíz → no duplicar)
+- Taxonomía ingredientes → sección: `contexto/ingredientes-secciones.md`
 - Índice decisiones: `contexto/decisiones.md`
 - Estado vivo: `state/done.md`, `state/pending.md`, `state/blockers.md`
 
