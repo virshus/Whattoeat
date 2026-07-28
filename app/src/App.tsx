@@ -294,6 +294,11 @@ export default function App() {
       setHousehold({ ...household, members, name: nextName });
     } catch (err) {
       console.error('[remove member]', err);
+      window.alert(
+        err instanceof Error
+          ? err.message
+          : 'No pudimos sacar a esa persona del menú. Probá de nuevo.'
+      );
     }
   };
 

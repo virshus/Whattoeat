@@ -182,14 +182,13 @@ export async function maybeRefreshDefaultHouseholdName(
 }
 
 export async function removeHouseholdMember(
-  householdId: string,
+  _householdId: string,
   userId: string
 ): Promise<void> {
-  const { error } = await supabase
-    .from('household_members')
-    .delete()
-    .eq('household_id', householdId)
-    .eq('user_id', userId);
+  // RPC (security definer): RLS table DELETE can report success with 0 rows.
+  const { error } = await supabase.rpc('remove_household_member', {
+    p_user_id: userId,
+  });
   if (error) throw new Error(error.message);
 }
 

@@ -268,9 +268,9 @@ export function ProfileView({
                           {member.name}
                           {isYou ? ' (vos)' : ''}
                         </p>
-                        <p className="text-caption text-ink-soft">
-                          {member.role === 'owner' ? 'Administrador' : 'Miembro'}
-                        </p>
+                        {member.email && (
+                          <p className="text-caption text-ink-soft truncate">{member.email}</p>
+                        )}
                       </div>
                       {!isYou && (
                         <button

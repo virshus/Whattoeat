@@ -52,7 +52,7 @@ Código en `app/src/`. Specs y decisiones en `contexto/`.
 | "importar receta", "instagram", "link" | `skills/recipe-import.md` |
 | "lista de compras", "consolidar", "secciones" | `skills/shopping-list-sync.md` |
 | "empty state", "componente nuevo", "UI" | `skills/ui-component.md` |
-| "login", "registro", "supabase", "compartir cuenta" | `skills/dev-setup.md` + `decisions/007` + `gotchas/supabase-env.md` |
+| "login", "registro", "supabase", "compartir cuenta", "sacar miembro" | `skills/dev-setup.md` + `decisions/007` + `gotchas/supabase-env.md` + `gotchas/remove-member-persist.md` |
 
 Skills del repo viven en `skills/`. Skills globales de Cursor (`~/.cursor/skills-cursor/`) solo si el usuario lo pide explícitamente.
 

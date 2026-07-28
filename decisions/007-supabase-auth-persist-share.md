@@ -15,6 +15,8 @@ Usar **Supabase Auth + Postgres + RLS**.
 - Bootstrap al registrarse (trigger): `profiles` + hogar personal + `week_plans` vacío.
 - Datos viven en el **hogar** (`households` / `household_members`).
 - Join por `invite_code` vía RPC `join_household_by_code` (un membership activo).
+- Sacar del menú compartido vía RPC `remove_household_member` (cualquier integrante puede sacar a otro; recrea hogar personal al sacado). Ver `gotchas/remove-member-persist.md`.
+- El campo `role` en DB (`owner`/`member`) es interno de bootstrap/join; la UI no distingue administrador vs miembro.
 - Express sigue solo para import Gemini.
 
 ## Setup
