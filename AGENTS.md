@@ -11,7 +11,7 @@ Código en `app/src/`. Specs y decisiones en `contexto/`.
 
 ## Reglas duras (invariantes)
 
-1. **Lista de compras:** 3 secciones fijas — Verdulería, Carnicería, Supermercado (+ `Otros` solo fallback interno). Ver `decisions/001-shopping-sections.md`.
+1. **Lista de compras:** 4 secciones fijas — Verdulería, Carnicería, Pescadería, Supermercado (+ `Otros` solo fallback interno). Ver `decisions/001-shopping-sections.md`.
 2. **Consolidación:** un ingrediente = un renglón; sumar cantidades numéricas compatibles; **nunca** inventar cantidad para "al gusto".
 3. **Origen de ítems:** solo recetas asignadas a la semana + ítems manuales (`isCustom`). Nada más.
 4. **Import de recetas:** Gemini rellena **solo** lo encontrado en la URL; campos ausentes quedan vacíos. No mock, no inventar.

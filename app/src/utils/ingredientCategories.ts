@@ -8,18 +8,25 @@ import { normalizeName } from './ingredientNormalize';
  * Match rules:
  * - case / accents / singular-plural via normalizeName
  * - phrase match with word boundaries (no mid-word, e.g. sal ⧸ salmón)
- * - longest keyword wins; tie → Carnicería > Verdulería > Supermercado
+ * - longest keyword wins; tie → Carnicería > Pescadería > Verdulería > Supermercado
  * - no confident match → Supermercado (ADR 001)
  */
 
-const SECTION_PRIORITY: Record<'Carnicería' | 'Verdulería' | 'Supermercado', number> = {
-  Carnicería: 3,
+const SECTION_PRIORITY: Record<
+  'Carnicería' | 'Pescadería' | 'Verdulería' | 'Supermercado',
+  number
+> = {
+  Carnicería: 4,
+  Pescadería: 3,
   Verdulería: 2,
   Supermercado: 1,
 };
 
 /** Longer / more specific phrases first in spirit; ranking is by normalized length. */
-const CATEGORY_KEYWORDS: Record<'Carnicería' | 'Verdulería' | 'Supermercado', string[]> = {
+const CATEGORY_KEYWORDS: Record<
+  'Carnicería' | 'Pescadería' | 'Verdulería' | 'Supermercado',
+  string[]
+> = {
   Carnicería: [
     'carne picada',
     'carne molida',
@@ -41,11 +48,6 @@ const CATEGORY_KEYWORDS: Record<'Carnicería' | 'Verdulería' | 'Supermercado', 
     'chuletas de cerdo',
     'chuleta de cerdo',
     'salchicha parrillera',
-    'jamon crudo',
-    'jamon cocido',
-    'atun fresco',
-    'filet de pescado',
-    'filete de pescado',
     'roast beef',
     'milanesas',
     'milanesa',
@@ -66,21 +68,12 @@ const CATEGORY_KEYWORDS: Record<'Carnicería' | 'Verdulería' | 'Supermercado', 
     'cerdo',
     'bondiola',
     'costillitas',
-    'panceta',
     'chorizo',
     'chorizos',
     'morcilla',
     'morcillas',
     'salchicha',
     'salchichas',
-    'pescado',
-    'merluza',
-    'salmon',
-    'trucha',
-    'camaron',
-    'camarones',
-    'langostino',
-    'langostinos',
     'cordero',
     'pavo',
     'conejo',
@@ -90,6 +83,29 @@ const CATEGORY_KEYWORDS: Record<'Carnicería' | 'Verdulería' | 'Supermercado', 
     'mollejas',
     'suprema',
     'supremas',
+  ],
+  Pescadería: [
+    'atun fresco',
+    'filet de pescado',
+    'filete de pescado',
+    'pescado',
+    'merluza',
+    'salmon',
+    'trucha',
+    'camaron',
+    'camarones',
+    'langostino',
+    'langostinos',
+    'atun',
+    'caballa',
+    'calamar',
+    'calamares',
+    'pulpo',
+    'mejillones',
+    'berberechos',
+    'bacalao',
+    'corvina',
+    'pejerrey',
   ],
   Verdulería: [
     'cebolla de verdeo',
@@ -185,6 +201,15 @@ const CATEGORY_KEYWORDS: Record<'Carnicería' | 'Verdulería' | 'Supermercado', 
     'fiambre envasado',
     'salame envasado',
     'mortadela envasada',
+    'jamon crudo',
+    'jamon cocido',
+    'jamon',
+    'mortadela',
+    'panceta',
+    'salame',
+    'salami',
+    'fiambre',
+    'fiambres',
     'papas fritas congeladas',
     'papas congeladas',
     'verduras congeladas',
@@ -234,6 +259,9 @@ const CATEGORY_KEYWORDS: Record<'Carnicería' | 'Verdulería' | 'Supermercado', 
     'yerba mate',
     'frutos secos',
     'nuez moscada',
+    'pasas de uva',
+    'pasa de uva',
+    'pasas',
     'leche',
     'yogur',
     'yogurt',
@@ -292,7 +320,7 @@ const CATEGORY_KEYWORDS: Record<'Carnicería' | 'Verdulería' | 'Supermercado', 
   ],
 };
 
-type RankedSection = 'Carnicería' | 'Verdulería' | 'Supermercado';
+type RankedSection = 'Carnicería' | 'Pescadería' | 'Verdulería' | 'Supermercado';
 
 interface KeywordEntry {
   section: RankedSection;
@@ -323,7 +351,7 @@ function phraseMatches(ingredientNorm: string, keywordNorm: string): boolean {
 
 /**
  * Classify an ingredient name into a shopping section.
- * Returns one of the 3 product sections; never invents new categories.
+ * Returns one of the 4 product sections; never invents new categories.
  */
 export function classifyIngredient(name: string): IngredientCategory {
   const ingredientNorm = normalizeName(name);
@@ -346,12 +374,11 @@ export function classifyIngredient(name: string): IngredientCategory {
   return best?.section ?? 'Supermercado';
 }
 
-/** Prefer an explicit real section; otherwise classify from the name. */
+/** Prefer taxonomy from the name; ignore stale/legacy categories (e.g. fish under Carnicería). */
 export function resolveIngredientCategory(
   name: string,
-  existing?: IngredientCategory | null
+  _existing?: IngredientCategory | null
 ): IngredientCategory {
-  if (existing && existing !== 'Otros') return existing;
   return classifyIngredient(name);
 }
 
@@ -361,6 +388,14 @@ export function preferredCategory(
   b: IngredientCategory
 ): IngredientCategory {
   const rank = (c: IngredientCategory) =>
-    c === 'Carnicería' ? 3 : c === 'Verdulería' ? 2 : c === 'Supermercado' ? 1 : 0;
+    c === 'Carnicería'
+      ? 4
+      : c === 'Pescadería'
+        ? 3
+        : c === 'Verdulería'
+          ? 2
+          : c === 'Supermercado'
+            ? 1
+            : 0;
   return rank(a) >= rank(b) ? a : b;
 }

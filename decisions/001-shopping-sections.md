@@ -1,24 +1,30 @@
 # 001 — Secciones fijas de lista de compras
 
 **Fecha:** 2026-07 (ficha 4D)  
+**Actualizado:** 2026-07-28 (Pescadería separada)  
 **Estado:** vigente
 
 ## Decisión
 
-La lista de compras tiene **3 secciones fijas visibles** (orden de UI):
+La lista de compras tiene **4 secciones fijas visibles** (orden de UI):
 1. Supermercado
 2. Verdulería
 3. Carnicería
+4. Pescadería
 
-`Otros` existe en el tipo TypeScript como **fallback interno** (ingrediente sin categoría). No es una sección de producto deliberada.
+`Otros` existe en el tipo TypeScript como **fallback interno** (ítems legacy). No es una sección de producto deliberada.
 
 ## Por qué
 
-El usuario compra físicamente por tipo de negocio. Cambiar la estructura rompe el hábito (ficha D1: no automatizar ni delegar las 3 secciones).
+El usuario compra físicamente por tipo de negocio. Carnicería y pescadería son locales distintos en el hábito rioplatense; mezclar pescados con carnes rompe ese recorrido.
+
+La ficha 4D original hablaba de 3 secciones; producto evolucionó a 4 al separar pescados/mariscos.
 
 ## Reglas
 
-- Clasificación por defecto / ambigua → **Supermercado** (ficha D2). Código hoy usa `Otros` si falta `category` — ver `gotchas/otros-vs-supermercado.md`.
+- Clasificación por defecto / ambigua → **Supermercado** (ficha D2).
+- Taxonomía y matching: `contexto/ingredientes-secciones.md` + `ingredientCategories.ts`.
+- Empate de match: Carnicería > Pescadería > Verdulería > Supermercado.
 - Design.md dice "Almacén"; producto/código usan **Supermercado**. Preferir Supermercado.
 
 ## Fuentes

@@ -11,7 +11,7 @@ Referencia de producto para clasificar cada ingrediente en la lista de compras d
 - **Singular y plural = mismo ingrediente**: si el listado dice `Papa`, también debe reconocerse `Papas`. Aplica a **todos** los ingredientes de este documento.
 - **Ignorar cantidad/unidad al matchear**: `2 papas`, `500g de papa`, `papa (al gusto)` matchean contra `papa`.
 - **Coincidencia parcial válida** con límites de palabra: si el nombre contiene el término base como palabra/frase, matchea (ej. `papa noisette`, `papa pay` → Verdulería; `queso rallado light` → Supermercado). No matchear en el medio de otra palabra (`sal` no captura `salmón`).
-- **Si hay más de un match**, gana el **término más largo**; ante empate de largo: **Carnicería > Verdulería > Supermercado** (ej. `milanesa de pollo` → Carnicería).
+- **Si hay más de un match**, gana el **término más largo**; ante empate de largo: **Carnicería > Pescadería > Verdulería > Supermercado** (ej. `milanesa de pollo` → Carnicería).
 - **Default sin match confiable → Supermercado** (ficha D2 / ADR 001). `Otros` es solo fallback interno de tipo/UI, no una sección de producto nueva. Nunca inventar categorías.
 
 ---
@@ -60,7 +60,7 @@ Referencia de producto para clasificar cada ingrediente en la lista de compras d
 - Frutilla / Frutillas / Fresa / Fresas
 - Arándano / Arándanos
 - Frambuesa / Frambuesas
-- Uva / Uvas
+- Uva / Uvas *(frescas; pasas de uva → Supermercado)*
 - Durazno / Duraznos
 - Ciruela / Ciruelas
 - Kiwi / Kiwis
@@ -86,7 +86,7 @@ Referencia de producto para clasificar cada ingrediente en la lista de compras d
 
 ---
 
-## Carnicería (carnes, aves, pescados, embutidos frescos)
+## Carnicería (carnes, aves, embutidos frescos)
 
 - Carne picada / Carne molida
 - Carne vacuna / Carne de vaca
@@ -110,26 +110,36 @@ Referencia de producto para clasificar cada ingrediente en la lista de compras d
 - Bondiola
 - Costillar de cerdo / Costillitas
 - Chuleta / Chuletas de cerdo
-- Panceta
-- Chorizo / Chorizos
+- Chorizo / Chorizos *(fresco para asado; queda en Carnicería)*
 - Morcilla / Morcillas
 - Salchicha / Salchichas
 - Salchicha parrillera
-- Jamón crudo
-- Jamón cocido (fresco de fiambrería; si es envasado de almacén → Supermercado)
-- Pescado
-- Merluza
-- Salmón
-- Atún fresco
-- Trucha
-- Filet de pescado / Filete de pescado
-- Camarón / Camarones / Langostino / Langostinos
 - Cordero / Carne de cordero
 - Pavo / Carne de pavo
 - Conejo
 - Hígado
 - Riñón / Riñones
 - Mollejas
+
+---
+
+## Pescadería (pescados y mariscos frescos)
+
+- Pescado (nombre genérico)
+- Merluza
+- Salmón
+- Atún fresco (si es en lata → Supermercado)
+- Trucha
+- Filet de pescado / Filete de pescado
+- Camarón / Camarones / Langostino / Langostinos
+- Caballa
+- Calamar / Calamares
+- Pulpo
+- Mejillones
+- Berberechos
+- Bacalao
+- Corvina
+- Pejerrey
 
 ---
 
@@ -209,14 +219,20 @@ Referencia de producto para clasificar cada ingrediente en la lista de compras d
 - Galletitas
 - Cereales
 - Frutos secos / Nuez / Nueces / Almendra / Almendras / Maní
+- Pasas de uva / Pasas / Pasa de uva
 - Chocolate
 - Té / Café / Yerba / Yerba mate
 - Agua mineral
 - Gaseosa
 - Jugo / Jugo en polvo
 
-### Fiambrería envasada
+### Fiambrería / fiambres
 
+- Jamón / Jamón cocido / Jamón crudo
+- Mortadela
+- Panceta
+- Salame / Salami
+- Fiambre / Fiambres
 - Jamón cocido envasado / Fiambre envasado
 - Salame envasado
 - Mortadela envasada

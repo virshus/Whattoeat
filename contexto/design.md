@@ -79,7 +79,7 @@ Contenedor vacío = invitación a la acción ("Agregá una receta"), nunca un es
 Checkbox circular grande (fácil de tocar con el súper en la mano) + nombre + cantidad ajustada por porciones. Al tachar: strikethrough + opacidad 40%, permanece visible (no desaparece) para dar sensación de progreso.
 
 **Section Header (lista de compras)**
-Verdulería / Carnicería / Almacén — label en caption, con un ícono simple de línea, separador sutil, no caja pesada.
+Verdulería / Carnicería / Pescadería / Almacén — label en caption, con un ícono simple de línea, separador sutil, no caja pesada.
 
 **Botón primario**
 Pill-shape, `--color-primary` (violeta), texto blanco, 48px alto mínimo (target táctil). Verbo de acción siempre explícito: "Agregar a la semana", nunca "Confirmar".

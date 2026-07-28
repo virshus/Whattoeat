@@ -8,7 +8,7 @@ Marca cálida, estilo Airbnb. Microcopy en **español rioplatense**.
 
 - **Plan semanal** — 5 días × 2 slots (Almuerzo / Cena)
 - **Recetas** — catálogo propio + import desde URL (Instagram / web) con Gemini
-- **Lista de compras** — consolidada en 3 secciones fijas: Verdulería, Carnicería, Supermercado
+- **Lista de compras** — consolidada en 4 secciones fijas: Verdulería, Carnicería, Pescadería, Supermercado
 - **Hogar compartido** — auth y datos en Supabase; invitá a otra persona con un código
 
 ## Stack

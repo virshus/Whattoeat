@@ -192,7 +192,7 @@ export const mockRecipes: Recipe[] = [
       { label: 'Keto', color: 'violet' }
     ],
     ingredients: [
-      { name: 'Salmón fresco', quantity: '500g', category: 'Carnicería' },
+      { name: 'Salmón fresco', quantity: '500g', category: 'Pescadería' },
       { name: 'Limas', quantity: '2 un.', category: 'Verdulería' },
       { name: 'Ajo', quantity: '2 dientes', category: 'Verdulería' },
       { name: 'Espárragos', quantity: '1 atado', category: 'Verdulería' }

@@ -1,4 +1,9 @@
-export type IngredientCategory = 'Supermercado' | 'Verdulería' | 'Carnicería' | 'Otros';
+export type IngredientCategory =
+  | 'Supermercado'
+  | 'Verdulería'
+  | 'Carnicería'
+  | 'Pescadería'
+  | 'Otros';
 
 export interface Ingredient {
   name: string;

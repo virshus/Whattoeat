@@ -17,7 +17,7 @@ Trigger: `useEffect` en `App.tsx` deps `[weekPlan, recipes]`.
 1. Leer `decisions/001` + `002` + `003` + `contexto/ingredientes-secciones.md` antes de tocar lógica.
 2. Preservar `isCustom` y `isChecked` en merge.
 3. No inventar cantidades para "al gusto".
-4. UI: 3 secciones producto; `Otros` solo fallback. Default sin match → **Supermercado**.
+4. UI: 4 secciones producto (Supermercado, Verdulería, Carnicería, Pescadería); `Otros` solo fallback. Default sin match → **Supermercado**.
 5. Categoría: `classifyIngredient` (`ingredientCategories.ts`); taxonomía humana en el md de contexto.
 
 ## Archivos
@@ -30,6 +30,8 @@ Trigger: `useEffect` en `App.tsx` deps `[weekPlan, recipes]`.
 - "1 unidad" + "3 unidades" → "4 unidades"
 - "Papa" + "Papas" → un renglón Verdulería
 - "milanesa de pollo" → Carnicería
+- "salmón" / "merluza" → Pescadería
+- "atún en lata" → Supermercado
 - "queso rallado light" → Supermercado
 - Desconocido → Supermercado (no Otros)
 - Quitar comida del plan → ítem desaparece (salvo custom)

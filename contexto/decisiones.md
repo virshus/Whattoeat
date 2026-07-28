@@ -6,7 +6,7 @@ Puntero central. Detalle en `decisions/` (ADR) o specs en este folder.
 
 | ID | Tema | Fuente | Archivo |
 |---|---|---|---|
-| D1 | 3 secciones fijas de compra | ficha 4D | `decisions/001-shopping-sections.md` |
+| D1 | 4 secciones fijas de compra (incl. Pescadería) | ficha 4D + update | `decisions/001-shopping-sections.md` |
 | D1b | Taxonomía ingrediente → sección | producto | `contexto/ingredientes-secciones.md` + `app/src/utils/ingredientCategories.ts` |
 | D2 | Consolidación sin duplicados | ficha 4D + código | `decisions/002-shopping-consolidation.md` |
 | D3 | No inventar "al gusto" / datos | ficha 4D | `decisions/003-no-invented-data.md` |

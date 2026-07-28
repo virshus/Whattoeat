@@ -25,7 +25,13 @@ export function ShoppingListView({
   onDeleteCustomItem,
   onGoToWeekly,
 }: ShoppingListViewProps) {
-  const categories: IngredientCategory[] = ['Supermercado', 'Verdulería', 'Carnicería', 'Otros'];
+  const categories: IngredientCategory[] = [
+    'Supermercado',
+    'Verdulería',
+    'Carnicería',
+    'Pescadería',
+    'Otros',
+  ];
   const [openCategories, setOpenCategories] = useState<Record<string, boolean>>(
     categories.reduce((acc, cat) => ({ ...acc, [cat]: true }), {})
   );
