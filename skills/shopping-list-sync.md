@@ -25,6 +25,9 @@ Trigger: `useEffect` en `App.tsx` deps `[weekPlan, recipes]`.
 
 ## Test mental
 
-- 2 recetas con "tomate 200g" → un renglón "400g"
+- 2 recetas con "tomate 200g" → un renglón "400 g"
+- "1 unidad" + "3 unidades" → "4 unidades"
+- "Papa" + "Papas" → un renglón
 - Quitar comida del plan → ítem desaparece (salvo custom)
-- Checkbox + regenerar → checkbox se mantiene por nombre
+- Checkbox + regenerar → checkbox se mantiene por nombre normalizado
+- "Al gusto" nunca se convierte a número
