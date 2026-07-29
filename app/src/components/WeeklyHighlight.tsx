@@ -120,7 +120,7 @@ export function WeeklyHighlight({
               <div key={idx} className="flex flex-col items-center">
                 <span className="text-caption font-semibold mb-1.5 uppercase">{day.shortName}</span>
                 <div className="flex flex-col items-center">
-                  <div className={`w-10 h-10 rounded-full relative ${lunchZ} flex items-center justify-center`}>
+                  <div className={`w-11 h-11 rounded-full relative ${lunchZ} flex items-center justify-center`}>
                     {lunchImage ? (
                       <img
                         src={lunchImage}
@@ -129,11 +129,11 @@ export function WeeklyHighlight({
                       />
                     ) : (
                       <div className="w-full h-full rounded-full border-2 border-dashed border-white/40 flex items-center justify-center text-white/60 bg-primary">
-                        <Plus size={14} strokeWidth={2.5} />
+                        <Plus size={15} strokeWidth={2.5} />
                       </div>
                     )}
                   </div>
-                  <div className={`w-10 h-10 rounded-full relative -mt-2.5 ${dinnerZ} flex items-center justify-center`}>
+                  <div className={`w-11 h-11 rounded-full relative -mt-3 ${dinnerZ} flex items-center justify-center`}>
                     {dinnerImage ? (
                       <img
                         src={dinnerImage}
@@ -142,7 +142,7 @@ export function WeeklyHighlight({
                       />
                     ) : (
                       <div className="w-full h-full rounded-full border-2 border-dashed border-white/40 flex items-center justify-center text-white/60 bg-primary">
-                        <Plus size={14} strokeWidth={2.5} />
+                        <Plus size={15} strokeWidth={2.5} />
                       </div>
                     )}
                   </div>
