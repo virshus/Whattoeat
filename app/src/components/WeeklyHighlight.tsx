@@ -108,39 +108,48 @@ export function WeeklyHighlight({
         </div>
 
         <div className="flex justify-between items-start mt-5">
-          {plan.days.map((day, idx) => (
-            <div key={idx} className="flex flex-col items-center">
-              <span className="text-caption font-semibold mb-1.5 uppercase">{day.shortName}</span>
-              <div className="flex flex-col items-center">
-                <div className="w-10 h-10 rounded-full relative z-10 flex items-center justify-center">
-                  {day.slots[0]?.imageUrl ? (
-                    <img 
-                      src={day.slots[0].imageUrl} 
-                      alt=""
-                      className="w-full h-full object-cover rounded-full border-[2px] border-primary"
-                    />
-                  ) : (
-                    <div className="w-full h-full rounded-full border-2 border-dashed border-white/40 flex items-center justify-center text-white/60 bg-transparent">
-                      <Plus size={14} strokeWidth={2.5} />
-                    </div>
-                  )}
-                </div>
-                <div className="w-10 h-10 rounded-full relative -mt-2.5 z-0 flex items-center justify-center">
-                  {day.slots[1]?.imageUrl ? (
-                    <img 
-                      src={day.slots[1].imageUrl} 
-                      alt=""
-                      className="w-full h-full object-cover rounded-full border-[2px] border-primary"
-                    />
-                  ) : (
-                    <div className="w-full h-full rounded-full border-2 border-dashed border-white/40 flex items-center justify-center text-white/60 bg-transparent">
-                      <Plus size={14} strokeWidth={2.5} />
-                    </div>
-                  )}
+          {plan.days.map((day, idx) => {
+            const lunchImage = day.slots[0]?.imageUrl;
+            const dinnerImage = day.slots[1]?.imageUrl;
+            // Top (almuerzo) encima por defecto; solo la cena sube si es la única receta del día.
+            const dinnerOnly = !lunchImage && Boolean(dinnerImage);
+            const lunchZ = dinnerOnly ? 'z-0' : 'z-10';
+            const dinnerZ = dinnerOnly ? 'z-10' : 'z-0';
+
+            return (
+              <div key={idx} className="flex flex-col items-center">
+                <span className="text-caption font-semibold mb-1.5 uppercase">{day.shortName}</span>
+                <div className="flex flex-col items-center">
+                  <div className={`w-10 h-10 rounded-full relative ${lunchZ} flex items-center justify-center`}>
+                    {lunchImage ? (
+                      <img
+                        src={lunchImage}
+                        alt=""
+                        className="w-full h-full object-cover rounded-full border-[2px] border-primary"
+                      />
+                    ) : (
+                      <div className="w-full h-full rounded-full border-2 border-dashed border-white/40 flex items-center justify-center text-white/60 bg-primary">
+                        <Plus size={14} strokeWidth={2.5} />
+                      </div>
+                    )}
+                  </div>
+                  <div className={`w-10 h-10 rounded-full relative -mt-2.5 ${dinnerZ} flex items-center justify-center`}>
+                    {dinnerImage ? (
+                      <img
+                        src={dinnerImage}
+                        alt=""
+                        className="w-full h-full object-cover rounded-full border-[2px] border-primary"
+                      />
+                    ) : (
+                      <div className="w-full h-full rounded-full border-2 border-dashed border-white/40 flex items-center justify-center text-white/60 bg-primary">
+                        <Plus size={14} strokeWidth={2.5} />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
