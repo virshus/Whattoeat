@@ -88,9 +88,10 @@ export function RecipeDetailView({ recipe, onBack, onToggleFavorite, onDelete, o
         <div className="absolute top-0 left-0 right-0 p-4 pt-5 flex justify-between items-start">
           <button 
             onClick={onBack}
-            className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm shadow-sm flex items-center justify-center text-ink hover:scale-105 active:scale-95 transition-transform"
+            className="w-10 h-10 flex items-center justify-center text-white drop-shadow-sm hover:scale-105 active:scale-95 transition-transform"
+            aria-label="Volver"
           >
-            <ArrowLeft size={20} />
+            <ArrowLeft size={22} strokeWidth={2.5} />
           </button>
 
           <div className="flex gap-2">
@@ -175,11 +176,11 @@ export function RecipeDetailView({ recipe, onBack, onToggleFavorite, onDelete, o
         {recipe.ingredients && recipe.ingredients.length > 0 && (
           <div className="mb-5">
             <h2 className="section-title mb-3">Ingredientes</h2>
-            <div className="bg-white radius-card shadow-card overflow-hidden">
+            <div className="bg-white radius-card shadow-card overflow-hidden py-2">
               {recipe.ingredients.map((ingredient, idx) => (
                 <div 
                   key={idx}
-                  className={`flex justify-between items-center px-4 py-2.5 ${
+                  className={`flex justify-between items-center px-4 py-1.5 ${
                     idx !== recipe.ingredients!.length - 1 ? 'border-b border-surface' : ''
                   }`}
                 >

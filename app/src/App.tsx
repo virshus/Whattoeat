@@ -548,7 +548,7 @@ export default function App() {
         onLogout={handleLogout}
       />
 
-      <main className="max-w-2xl mx-auto pb-6 pt-1 h-full flex flex-col">
+      <main className="max-w-2xl mx-auto pb-6 pt-2 h-full flex flex-col">
         {currentView === 'home' ? (
           <>
             <WeeklyHighlight

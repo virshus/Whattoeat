@@ -13,6 +13,7 @@
 - [x] Sync lista ↔ plan/recetas (`shoppingList.ts` + effect en `App.tsx`)
 - [x] UI clean: tokens tipográficos/espaciado en `index.css` (2026-07-21)
 - [x] Fotos de receta persistentes (data URL) + draft de creación en sessionStorage (2026-07-28)
+- [x] Canon UI 2026-07-28: Inter, section 16 / header 18, aire home 28px, sombras suaves, drawer derecha, back sin círculo (`contexto/design.md`)
 
 ## Import
 

@@ -29,20 +29,20 @@ export function Header({
   const showHouseholdHint = currentView === 'home' && householdMemberCount > 1;
 
   return (
-    <header className="flex items-center justify-between page-x py-3 mb-1">
+    <header className="flex items-center justify-between page-x py-3 mb-2">
       <div className="flex items-center gap-3 min-w-0">
         {currentView !== 'home' && (
           <button
             onClick={onBack}
-            className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-ink hover:text-primary transition-colors shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary active:scale-95 shrink-0"
+            className="w-10 h-10 flex items-center justify-center text-ink hover:text-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm active:scale-95 shrink-0 -ml-1"
             aria-label="Volver"
           >
-            <ChevronLeft size={22} strokeWidth={2.5} className="-ml-0.5" />
+            <ChevronLeft size={24} strokeWidth={2.5} className="-ml-0.5" />
           </button>
         )}
         {currentView === 'home' ? (
           <div className="min-w-0">
-            <h1 className="text-primary-dark font-display font-semibold text-h2 truncate">
+            <h1 className="text-primary-dark font-semibold text-h2 truncate">
               Hola, {user.name}
             </h1>
             {showHouseholdHint && (

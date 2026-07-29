@@ -41,11 +41,11 @@ export function Drawer({ isOpen, onClose, currentView, onNavigate, onLogout }: D
           />
 
           <motion.div
-            initial={{ x: '-100%' }}
+            initial={{ x: '100%' }}
             animate={{ x: 0 }}
-            exit={{ x: '-100%' }}
+            exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed top-0 left-0 bottom-0 w-3/4 max-w-sm bg-surface z-50 shadow-2xl flex flex-col"
+            className="fixed top-0 right-0 bottom-0 w-3/4 max-w-sm bg-surface z-50 shadow-2xl flex flex-col"
           >
             <div className="p-4 flex justify-end">
               <button

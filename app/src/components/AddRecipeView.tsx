@@ -859,7 +859,7 @@ export function AddRecipeView({
                 ? handleClose
                 : () => setMethod('options')
             }
-            className="w-11 h-11 bg-white rounded-full flex items-center justify-center text-ink hover:text-primary transition-colors shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary active:scale-95 shrink-0"
+            className="w-11 h-11 flex items-center justify-center text-ink hover:text-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm active:scale-95 shrink-0 -ml-1"
           >
             <ChevronLeft size={24} strokeWidth={2.5} className="-ml-0.5" />
           </button>

@@ -13,7 +13,7 @@ Estilo de referencia: **Airbnb** — cálido, confiable, con foco en contenido r
 - **La comida es la protagonista.** Fotos grandes, generosas, sin recortes forzados. La UI se corre para dejar respirar el contenido.
 - **Calidez sin infantilismo.** Bordes redondeados y color vivo, pero con jerarquía tipográfica seria — esto resuelve un problema real (falta de tiempo), no es un juguete.
 - **Confianza en cada micro-decisión.** Como Airbnb con "vas a viajar a lo desconocido", acá el usuario delega "qué comer" — cada pantalla debe sentirse resuelta, nunca ambigua.
-- **Aire como lujo.** El espacio en blanco comunica que planificar la semana no es una tarea pesada.
+- **Aire como lujo.** El espacio en blanco comunica que planificar la semana no es una tarea pesada. Secciones de la home con más respiración que cards apiladas.
 
 ---
 
@@ -33,24 +33,31 @@ Estilo de referencia: **Airbnb** — cálido, confiable, con foco en contenido r
 
 No se usa negro puro ni blanco puro: todo tiene una temperatura cálida, consistente con la naturaleza doméstica del producto.
 
+> **Implementación:** primary real en CSS es `#8518E9` / dark `#6B08C7` — ver `gotchas/design-tokens-drift.md`.
+
 ---
 
 ## 3. Tipografía
 
-- **Display / Headings:** `Cereal` (o fallback `Circular Std` / `Poppins SemiBold`) — geométrica, redondeada, amigable pero con peso editorial.
-- **Body:** `Inter` — alta legibilidad en listas largas (ingredientes, pasos de receta).
-- **Utility / Data:** `Inter Medium`, tracking +0.02em — para tags, badges de tiempo, cantidades.
+**Familia única:** `Inter` en toda la app (títulos, body, utility). Sin Poppins / Cereal.
+
+- **Títulos y énfasis:** Inter SemiBold (600)
+- **Body:** Inter Regular (400)
+- **Utility / Data:** Inter Medium (500), tracking +0.02em — tags, badges de tiempo, cantidades
 
 **Escala tipográfica:**
 
-| Rol | Tamaño | Peso | Uso |
-|---|---|---|---|
-| Display | 32px / 40px lh | 700 | Título de sección ("Tu semana") |
-| H1 | 24px / 32px lh | 600 | Nombre de receta en detalle |
-| H2 | 18px / 24px lh | 600 | Nombre de receta en card |
-| Body | 16px / 24px lh | 400 | Instrucciones, descripciones |
-| Small | 14px / 20px lh | 500 | Metadata (tiempo, porciones) |
-| Caption | 12px / 16px lh | 500 | Tags, labels de sección en lista de compras |
+| Rol | Token CSS | Tamaño | Peso | Uso |
+|---|---|---|---|---|
+| Display | `--text-display` | 24px | 600–700 | Hero puntual (auth, progreso grande) |
+| H1 | `--text-h1` | 24px | 600 | Nombre de receta en detalle |
+| H2 / page title | `--text-h2` | 18px | 600 | **Header de pantalla** ("Hola, …", "Recetas", "Perfil", "Menú semanal") — clase `.page-title` |
+| Section title | `--text-body` | 16px | 600 | **Títulos de sección** ("Tus recetas guardadas", "Compartir", "Cuenta", "Ingredientes") — clase `.section-title` |
+| Body | `--text-body` | 16px | 400 | Instrucciones, descripciones |
+| Small | `--text-small` | 14px | 500 | Metadata (tiempo, porciones) |
+| Caption | `--text-caption` | 12px | 500 | Tags, labels auxiliares |
+
+**Regla:** no mezclar tamaños de título. Header = 18px; resto de títulos de sección = 16px.
 
 ---
 
@@ -58,10 +65,27 @@ No se usa negro puro ni blanco puro: todo tiene una temperatura cálida, consist
 
 Grid de 8px como unidad base.
 
-- Padding de card: `16px` (mobile) / `24px` (desktop)
-- Gap entre cards: `12px`
-- Radio de borde: `12px` en cards, `24px` en botones primarios (pill-shape, firma visual de Airbnb), `8px` en inputs
-- Sombra de card: `0 2px 8px rgba(0,0,0,0.08)` — sutil, elevación de "foto sobre mesa", no dramática
+| Token / regla | Valor | Uso |
+|---|---|---|
+| `--space-section` | `28px` | Separación entre bloques de la home (semana → lista → recetas) |
+| `--space-card` / `--space-card-lg` | `16px` / `24px` | Padding interno de card (mobile / desktop) |
+| `--gap-cards` | `12px` | Gap entre cards apiladas (recetas en home, etc.) |
+| Radio de borde | `12px` cards, `24px` pills, `8px` inputs | |
+| Sombras | ver §4.1 | Elevación suave, nunca dramática |
+
+### 4.1 Sombras (suaves)
+
+| Token | Valor |
+|---|---|
+| `--shadow-sm` | `0 1px 3px rgba(0, 0, 0, 0.04)` |
+| `--shadow-card` | `0 1px 6px rgba(0, 0, 0, 0.05)` |
+| `--shadow-md` | `0 2px 8px rgba(0, 0, 0, 0.06)` |
+
+### 4.2 Navegación chrome
+
+- **Menú (hamburger):** círculo blanco con sombra; drawer entra desde la **derecha**.
+- **Flecha atrás:** solo el ícono (sin círculo ni fondo). Mismo target táctil ≥ 44px. Aplica en header, alta/edición de receta y detalle.
+- Otros íconos de acción sobre foto (favorito, editar, borrar) pueden conservar círculo.
 
 **Vista semanal (lunes a viernes):** grid horizontal scrolleable en mobile, 5 columnas fijas en desktop. Cada día es una columna con slots apilados (almuerzo / cena), no una lista — el usuario debe *ver* la semana completa de un vistazo, tal como lo hacía en su planner de papel.
 
@@ -79,7 +103,10 @@ Contenedor vacío = invitación a la acción ("Agregá una receta"), nunca un es
 Checkbox circular grande (fácil de tocar con el súper en la mano) + nombre + cantidad ajustada por porciones. Al tachar: strikethrough + opacidad 40%, permanece visible (no desaparece) para dar sensación de progreso.
 
 **Section Header (lista de compras)**
-Verdulería / Carnicería / Pescadería / Almacén — label en caption, con un ícono simple de línea, separador sutil, no caja pesada.
+Verdulería / Carnicería / Pescadería / Supermercado — label en section title (16px), con un ícono simple de línea, separador sutil, no caja pesada.
+
+**Lista de ingredientes (detalle de receta)**
+Card blanca: `+8px` de padding vertical interno (`py-2`). Ítems más compactos (`py-1.5`) que el padding de la card, con divisor sutil entre filas.
 
 **Botón primario**
 Pill-shape, `--color-primary` (violeta), texto blanco, 48px alto mínimo (target táctil). Verbo de acción siempre explícito: "Agregar a la semana", nunca "Confirmar".
@@ -92,6 +119,7 @@ Pill-shape, `--color-primary` (violeta), texto blanco, 48px alto mínimo (target
 - Sin culpa ni tono clínico en sugerencias nutricionales: "Esta semana viene liviana en proteína" en vez de "Déficit proteico detectado".
 - Estados vacíos como invitación, no como error: "Tu semana está libre. ¿Qué comemos?"
 - Confirmaciones consistentes con el verbo de la acción: el botón dice "Agregar a la lista" → el toast dice "Agregado a la lista".
+- Español rioplatense (vos).
 
 ---
 
@@ -105,5 +133,5 @@ Pill-shape, `--color-primary` (violeta), texto blanco, 48px alto mínimo (target
 
 - Contraste mínimo AA en todo texto sobre `--color-canvas` y `--color-surface`
 - Focus visible en todos los elementos interactivos (outline `--color-primary` violeta, 2px)
-- Touch targets mínimo 44×44px (checkboxes de lista de compras, botones de día)
+- Touch targets mínimo 44×44px (checkboxes de lista de compras, botones de día, flecha atrás sin círculo)
 - Reduced motion respetado en transiciones de card a detalle

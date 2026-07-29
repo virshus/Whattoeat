@@ -19,7 +19,7 @@ Prioridad aproximada (arriba = más urgente).
 ## P2 — UI / producto
 
 9. Unificar primary: design `#9D00FF` vs CSS `#8518E9` (`gotchas/design-tokens-drift.md`).
-10. Display tipográfico: design 32px vs CSS 24px post-UI-clean — decidir canon.
+10. ~~Display tipográfico: design 32px vs CSS 24px~~ — canon: Inter + header 18 / section 16 (`contexto/design.md`, 2026-07-28).
 11. Invitar por email real (hoy stub en Invite sheet).
 
 ## P3 — Ops
